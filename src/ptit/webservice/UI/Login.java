@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ptit.webservice.admin;
+package ptit.webservice.UI;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
+import ptit.webservice.admin.Program;
 
 /**
  *
@@ -154,9 +155,9 @@ public class Login extends javax.swing.JDialog {
             String json = new Gson().toJson(params);
             byte[] data = json.getBytes("UTF-8");
 
-            Map<String, String> headers = new HashMap<>();
-            headers.put(Program.HttpHeader.ContentType.getHeader(), "application/json; charset=utf-8 ");
-            headers.put(Program.HttpHeader.ContentLength.getHeader(), Integer.toString(data.length));
+            Map<Program.HttpHeader, String> headers = new HashMap<>();
+            headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8 ");
+            headers.put(Program.HttpHeader.ContentLength, Integer.toString(data.length));
 
             String jsonResult = Program.SendHttp(url, Program.HttpMethod.POST, data, headers);
             // convert json to map
@@ -168,8 +169,9 @@ public class Login extends javax.swing.JDialog {
                 // success true
                 // TODO: save Token
                 Program.Token = (String) obj.get("data");
+                this.dispose();
                 // redirect to admin dashboard
-
+                Dashboard.run();
             }
         } catch (JsonSyntaxException | HeadlessException | IOException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
@@ -201,12 +203,6 @@ public class Login extends javax.swing.JDialog {
                 }
             }
             Login dialog = new Login(new javax.swing.JFrame(), true);
-            dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosing(java.awt.event.WindowEvent e) {
-                    System.exit(0);
-                }
-            });
             dialog.setVisible(true);
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {

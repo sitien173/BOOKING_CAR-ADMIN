@@ -5,6 +5,7 @@
  */
 package ptit.webservice.admin;
 
+import ptit.webservice.UI.Login;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -95,7 +96,7 @@ public class Program {
     }
 
     // only using method GET
-    public static String SendHttpGet(String url, Map<String, String> params, Map<String, String> headers) throws MalformedURLException, ProtocolException, IOException {
+    public static String SendHttpGet(String url, Map<String, String> params, Map<HttpHeader, String> headers) throws MalformedURLException, ProtocolException, IOException {
         StringBuilder sb = new StringBuilder();
         StringBuilder strParams = new StringBuilder();
         if (params != null) {
@@ -116,7 +117,7 @@ public class Program {
         conn.setDoOutput(true);
         if (headers != null) {
             headers.forEach((k, v) -> {
-                conn.setRequestProperty(k, v);
+                conn.setRequestProperty(k.header, v);
             });
         }
 
@@ -151,7 +152,7 @@ public class Program {
     }
 
     // used to send POST, PUT, PATCH, DELETE
-    public static String SendHttp(String url, HttpMethod method, byte[] data, Map<String, String> headers) throws MalformedURLException, ProtocolException, IOException {
+    public static String SendHttp(String url, HttpMethod method, byte[] data, Map<HttpHeader, String> headers) throws MalformedURLException, ProtocolException, IOException {
         URL _url = new URL(Program.BASE_URL + url); //your url i.e fetch data from .
         HttpURLConnection conn = (HttpURLConnection) _url.openConnection();
         conn.setDoOutput(true);
@@ -160,7 +161,7 @@ public class Program {
 
         if (headers != null) {
             headers.forEach((k, v) -> {
-                conn.setRequestProperty(k, v);
+                conn.setRequestProperty(k.header, v);
             });
         }
         conn.setUseCaches(false);
