@@ -5,6 +5,7 @@
  */
 package ptit.webservice.model;
 
+import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,12 +15,8 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public class AppUser {
-    private int id;
-    private String username;
-    private String email;
-    private String phoneNumber;
-    private String name;
-    private String role;
-    private String avatar ;
+public class ResponseModel<T> implements Serializable{
+    private boolean success;
+    private String message;
+    private T data;
 }

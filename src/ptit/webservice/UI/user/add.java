@@ -5,8 +5,26 @@
  */
 package ptit.webservice.UI.user;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import java.awt.Color;
+import java.awt.TrayIcon;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import ptit.webservice.admin.Program;
+import ptit.webservice.admin.Program.HttpHeader;
+import ptit.webservice.admin.ValidateUtility;
+import ptit.webservice.model.AppUser;
+import ptit.webservice.model.ResponseModel;
 
 /**
  *
@@ -21,9 +39,9 @@ public class add extends javax.swing.JDialog {
     public add(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        setTitle("Thêm người dùng mới");
-        getContentPane().setBackground(new Color(207 ,250 ,254));  //Whatever color
-        setLocationRelativeTo(null);
+        this.setTitle("Thêm người dùng mới");
+        jPanel1.setBackground(new Color(248, 250, 252));  //Whatever color
+        this.setLocationRelativeTo(null);
     }
 
     /**
@@ -44,17 +62,15 @@ public class add extends javax.swing.JDialog {
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
-        txtAddUserUsername = new javax.swing.JTextField();
-        txtAddUserEmail = new javax.swing.JTextField();
-        txtAddUserPassword = new javax.swing.JPasswordField();
-        txtAddUserRePassword = new javax.swing.JPasswordField();
-        txtAddUserPhoneNumber = new javax.swing.JTextField();
-        txtAddUserFullName = new javax.swing.JTextField();
-        btnAddUserUploadFile = new javax.swing.JButton();
-        btnAddUserSave = new javax.swing.JButton();
-        btnAddUserExit = new javax.swing.JButton();
-        jLabel9 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        txtUsername = new javax.swing.JTextField();
+        txtEmail = new javax.swing.JTextField();
+        txtPassword = new javax.swing.JPasswordField();
+        txtRePassword = new javax.swing.JPasswordField();
+        txtPhoneNumber = new javax.swing.JTextField();
+        txtFullName = new javax.swing.JTextField();
+        btnUploadFile = new javax.swing.JButton();
+        btnSave = new javax.swing.JButton();
+        btnExit = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Thêm người dùng mới");
@@ -95,46 +111,39 @@ public class add extends javax.swing.JDialog {
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel8.setText("Ảnh đại diện:");
 
-        txtAddUserUsername.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtUsername.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        txtAddUserEmail.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtEmail.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        txtAddUserPassword.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtPassword.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        txtAddUserRePassword.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtRePassword.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        txtAddUserPhoneNumber.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtPhoneNumber.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        txtAddUserFullName.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+        txtFullName.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-        btnAddUserUploadFile.setText("Chọn ảnh ...");
-        btnAddUserUploadFile.addActionListener(new java.awt.event.ActionListener() {
+        btnUploadFile.setText("Chọn ảnh ...");
+        btnUploadFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddUserUploadFileActionPerformed(evt);
+                btnUploadFileActionPerformed(evt);
             }
         });
 
-        btnAddUserSave.setText("Lưu");
-        btnAddUserSave.setBorder(null);
-        btnAddUserSave.addActionListener(new java.awt.event.ActionListener() {
+        btnSave.setText("Lưu");
+        btnSave.setBorder(null);
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddUserSaveActionPerformed(evt);
+                btnSaveActionPerformed(evt);
             }
         });
 
-        btnAddUserExit.setText("Thoát");
-        btnAddUserExit.addActionListener(new java.awt.event.ActionListener() {
+        btnExit.setText("Thoát");
+        btnExit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddUserExitActionPerformed(evt);
+                btnExitActionPerformed(evt);
             }
         });
-
-        jLabel9.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
-        jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel9.setText("Vai trò:");
-
-        jComboBox1.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "USER", "ADMIN" }));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -152,87 +161,75 @@ public class add extends javax.swing.JDialog {
                                 .addGap(1, 1, 1)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel8)
-                                    .addComponent(jLabel7)
-                                    .addComponent(jLabel9))))
+                                    .addComponent(jLabel7))))
                         .addGap(29, 29, 29))
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jLabel3)
                         .addComponent(jLabel2)
                         .addComponent(jLabel4)
                         .addComponent(jLabel5)))
-                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                         .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(btnAddUserExit)
+                            .addComponent(btnExit)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(btnAddUserSave, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtAddUserUsername)
-                            .addComponent(txtAddUserEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
-                            .addComponent(txtAddUserPassword)
-                            .addComponent(txtAddUserRePassword)
-                            .addComponent(txtAddUserPhoneNumber, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
-                            .addComponent(txtAddUserFullName, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)))
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jComboBox1, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnAddUserUploadFile, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(txtUsername)
+                            .addComponent(txtEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
+                            .addComponent(txtPassword)
+                            .addComponent(txtRePassword)
+                            .addComponent(txtPhoneNumber, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
+                            .addComponent(txtFullName, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)))
+                    .addComponent(btnUploadFile))
                 .addContainerGap(26, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(22, 22, 22)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(txtAddUserUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(txtAddUserEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(txtAddUserPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel5)
-                            .addComponent(txtAddUserRePassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtRePassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel6)
-                            .addComponent(txtAddUserPhoneNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtPhoneNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel7)
-                            .addComponent(txtAddUserFullName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(1, 1, 1)
-                        .addComponent(jLabel1)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(txtFullName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel8)
+                            .addComponent(btnUploadFile)))
+                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
-                    .addComponent(btnAddUserUploadFile))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel9)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAddUserSave, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAddUserExit, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                    .addComponent(btnExit, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(37, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -242,25 +239,90 @@ public class add extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnAddUserUploadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserUploadFileActionPerformed
+    private void btnUploadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUploadFileActionPerformed
         if(fileDialog == null) fileDialog = new JFileChooser();
         int returnVal = fileDialog.showOpenDialog(this);
          if (returnVal == JFileChooser.APPROVE_OPTION) {
              java.io.File file = fileDialog.getSelectedFile();
-             btnAddUserUploadFile.setText("File Selected :" + file.getName());
-             
+             btnUploadFile.setText("File Selected :" + file.getName());
          } 
-    }//GEN-LAST:event_btnAddUserUploadFileActionPerformed
+    }//GEN-LAST:event_btnUploadFileActionPerformed
 
-    private void btnAddUserExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserExitActionPerformed
+    private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExitActionPerformed
         this.dispose();
-    }//GEN-LAST:event_btnAddUserExitActionPerformed
+    }//GEN-LAST:event_btnExitActionPerformed
 
-    private void btnAddUserSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserSaveActionPerformed
-       // call api save user
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        if(!validateField()) return;
+        saveUser();
        
-    }//GEN-LAST:event_btnAddUserSaveActionPerformed
+    }//GEN-LAST:event_btnSaveActionPerformed
 
+    private boolean validateField() {
+        if(txtUsername.getText().isEmpty()) {
+         JOptionPane.showMessageDialog(this, "Tên đăng nhập không được để trống", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+         return false;
+        }
+        
+        if(txtPassword.getText().isEmpty()) {
+         JOptionPane.showMessageDialog(this, "Mật khẩu không được để trống", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+         return false;
+        }
+        if(txtRePassword.getText().isEmpty()) {
+         JOptionPane.showMessageDialog(this, "Vui lòng nhập lại mật khẩu", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+         return false;
+        }
+        
+        if(!txtPassword.getText().equals(txtRePassword.getText())){
+            JOptionPane.showMessageDialog(this, "Mật khẩu không khớp", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+            return false;
+        }
+//        
+        if(txtEmail.getText().isEmpty()) {
+         JOptionPane.showMessageDialog(this, "Email không được để trống", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+         return false;
+        }else {
+            // validate
+            if(!ValidateUtility.validateEmail(txtEmail.getText())) {
+               JOptionPane.showMessageDialog(this, "Email không hợp lệ", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);                
+               return false;
+            }
+        }
+        if(txtPhoneNumber.getText().isEmpty()) {
+         JOptionPane.showMessageDialog(this, "Số điện thoại không được để trống", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+         return false;
+        }
+        if(txtFullName.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Họ và tên không được để trống", "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+            return false;
+        }
+        return true;
+    }
+    
+    private void saveUser() {
+        // call api save user
+        String url = "/AppUsers/Registration";
+        MultipartEntityBuilder multipart = MultipartEntityBuilder.create();
+        multipart.addTextBody("username", txtUsername.getText(), ContentType.TEXT_PLAIN);
+        multipart.addTextBody("email", txtEmail.getText(), ContentType.TEXT_PLAIN);
+        multipart.addTextBody("Password", txtPassword.getText(), ContentType.TEXT_PLAIN);
+        multipart.addTextBody("PhoneNumber", txtPhoneNumber.getText(), ContentType.TEXT_PLAIN);
+        multipart.addTextBody("Name", txtFullName.getText(), ContentType.TEXT_PLAIN);
+        if(fileDialog != null) {
+            File file = fileDialog.getSelectedFile();
+            multipart.addBinaryBody("avatar", file);
+        }
+        String responseJson = Program.SendHttpFormData(url, Program.HttpMethod.POST, multipart,null, null);
+        java.lang.reflect.Type type = new TypeToken<ResponseModel<AppUser>>() {
+        }.getType();
+        ResponseModel<AppUser> response = new Gson().fromJson(responseJson, type);
+        if (!response.isSuccess()) {
+            JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } else
+        {
+            JOptionPane.showMessageDialog(this, "Thêm thành công", "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
+        }
+    }
     /**
      * @param args the command line arguments
      */
@@ -293,10 +355,9 @@ public class add extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAddUserExit;
-    private javax.swing.JButton btnAddUserSave;
-    private javax.swing.JButton btnAddUserUploadFile;
-    private javax.swing.JComboBox<String> jComboBox1;
+    private javax.swing.JButton btnExit;
+    private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnUploadFile;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -305,13 +366,12 @@ public class add extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField txtAddUserEmail;
-    private javax.swing.JTextField txtAddUserFullName;
-    private javax.swing.JPasswordField txtAddUserPassword;
-    private javax.swing.JTextField txtAddUserPhoneNumber;
-    private javax.swing.JPasswordField txtAddUserRePassword;
-    private javax.swing.JTextField txtAddUserUsername;
+    private javax.swing.JTextField txtEmail;
+    private javax.swing.JTextField txtFullName;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JTextField txtPhoneNumber;
+    private javax.swing.JPasswordField txtRePassword;
+    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }

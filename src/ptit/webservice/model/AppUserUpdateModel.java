@@ -14,12 +14,8 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public class AppUser {
-    private int id;
-    private String username;
+public class AppUserUpdateModel {
     private String email;
     private String phoneNumber;
     private String name;
-    private String role;
-    private String avatar ;
 }

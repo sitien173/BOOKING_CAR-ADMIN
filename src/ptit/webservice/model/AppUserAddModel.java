@@ -14,12 +14,11 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public class AppUser {
-    private int id;
+public class AppUserAddModel {
     private String username;
     private String email;
     private String phoneNumber;
     private String name;
-    private String role;
-    private String avatar ;
+    private String password;
+    
 }

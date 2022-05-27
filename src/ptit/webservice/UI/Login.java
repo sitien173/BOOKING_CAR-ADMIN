@@ -7,19 +7,50 @@ package ptit.webservice.UI;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import java.awt.HeadlessException;
 import java.awt.TrayIcon;
 import java.io.IOException;
+import java.net.ProtocolException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
 import ptit.webservice.admin.Program;
+import ptit.webservice.model.AppUser;
+import ptit.webservice.model.ResponseModel;
 
 /**
  *
  * @author ngosi
  */
 public class Login extends javax.swing.JDialog {
+
+    public Login() {}
+    private static boolean validateToken() {
+        try {
+            String url = "/AppUsers/Info";
+            Map<Program.HttpHeader, String> headers = new HashMap<>();
+            headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+            
+            
+            String jsonData = Program.SendHttpGet(url, null, headers);
+            
+            java.lang.reflect.Type type = new TypeToken<ResponseModel<AppUser>>() {
+            }.getType();
+            ResponseModel<AppUser> response = new Gson().fromJson(jsonData, type);
+            
+            if(!response.isSuccess()) {
+                return false;
+            }
+            else {
+                Program.identities = response.getData();
+                return true;
+            }
+        } catch (ProtocolException ex) {
+        } catch (IOException ex) {
+        }
+        return false;
+    }
 
     /**
      * Creates new form Login
@@ -78,25 +109,26 @@ public class Login extends javax.swing.JDialog {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(44, 44, 44)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGap(44, 44, 44)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnLogin, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnLogin, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addGap(111, 111, 111)))))
+                        .addGap(173, 173, 173)
+                        .addComponent(jLabel3)))
                 .addContainerGap(55, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -159,7 +191,7 @@ public class Login extends javax.swing.JDialog {
             headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8 ");
             headers.put(Program.HttpHeader.ContentLength, Integer.toString(data.length));
 
-            String jsonResult = Program.SendHttp(url, Program.HttpMethod.POST, data, headers);
+            String jsonResult = Program.SendHttp(url, Program.HttpMethod.POST, data, null, headers);
             // convert json to map
             Map<String, Object> obj = new Gson().fromJson(jsonResult, Map.class);
 
@@ -171,7 +203,7 @@ public class Login extends javax.swing.JDialog {
                 Program.Token = (String) obj.get("data");
                 this.dispose();
                 // redirect to admin dashboard
-                Dashboard.run();
+                new Dashboard().run();
             }
         } catch (JsonSyntaxException | HeadlessException | IOException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
@@ -194,7 +226,7 @@ public class Login extends javax.swing.JDialog {
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 
-    public static void run() {
+    public void run() {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -202,9 +234,18 @@ public class Login extends javax.swing.JDialog {
                     break;
                 }
             }
-            Login dialog = new Login(new javax.swing.JFrame(), true);
-            dialog.setVisible(true);
-
+            if(!Program.Token.isEmpty()) {
+                if(!validateToken()) {
+                    Login dialog = new Login(new javax.swing.JFrame(), true);
+                    dialog.setVisible(true);
+                }
+                else {
+                    this.dispose();
+                    // redirect to admin dashboard
+                    new Dashboard().run();
+                }
+            }
+            
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
