@@ -22,10 +22,12 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import ptit.webservice.UI.user.add;
-import ptit.webservice.UI.user.edit;
-import ptit.webservice.admin.Program;
-import ptit.webservice.model.AppUser;
+import ptit.webservice.UI.AppUser.add;
+import ptit.webservice.UI.AppUser.edit;
+import ptit.webservice.main.Program;
+import ptit.webservice.model.AppUser.AppUser;
+import ptit.webservice.model.Brand.Brand;
+import ptit.webservice.model.DetailType.DetailType;
 import ptit.webservice.model.PagingModel;
 import ptit.webservice.model.ResponseModel;
 
@@ -41,12 +43,20 @@ public class Dashboard extends javax.swing.JFrame {
     // cache appUser
     private static final Map<Integer, List<AppUser>> cacheAppUser = new HashMap<>();
     
+   
+    private static int pageIndexBrand = 1;
+    private static final int limitBrand = 20;
+    private static int totalPageBrand = 0;
+    // cache Brand
+    private static final Map<Integer, List<Brand>> cacheBrand = new HashMap<>();
     
-    private static int pageIndexCar = 0;
-
-    private static int pageIndexBrand = 0;
-
-    private static int pageIndexDetail = 0;
+     private static int pageIndexDetailType = 1;
+    private static final int limitDetailType = 20;
+    private static int totalPageDetailType = 0;
+    // cache Brand
+    private static final Map<Integer, List<DetailType>> cacheDetailType = new HashMap<>();
+    
+    
 
     private void getUsers(boolean isRefresh) {
         try {
@@ -115,6 +125,135 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
+    private void getBrands(boolean isRefresh) {
+        try {
+            List<Brand> brands = cacheBrand.get(pageIndexBrand);
+            if(brands == null || isRefresh) {
+              String url = "/Brands/list";
+               Map<String, String> params = new HashMap<>();
+               params.put("pageIndex", String.valueOf(pageIndexBrand));
+               params.put("limit", String.valueOf(limitBrand));
+
+               Map<Program.HttpHeader, String> headers = new HashMap<>();
+               headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+               headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+               String jsonData = Program.SendHttpGet(url, params, headers);
+
+               java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Brand>>>() {
+               }.getType();
+               ResponseModel<PagingModel<Brand>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                brands = response.getData().getItems();
+                totalPageBrand = response.getData().getTotalPage();
+                cacheBrand.put(pageIndexBrand, brands);
+            }
+            
+            DefaultTableModel model = (DefaultTableModel) tableBrand.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+                model.setColumnCount(0);
+                model.setRowCount(0);
+                
+                model.addColumn("Id");
+                model.addColumn("Name");
+                model.addColumn("Code");
+              
+               // model.addColumn("Avatar");
+                int size = brands.size();
+                for (int i = 0; i < size; i++) {
+                    Vector vt = new Vector<>();
+                    vt.add(String.valueOf(brands.get(i).getId()));
+                    vt.add(brands.get(i).getName());
+                    vt.add(brands.get(i).getCode());
+                    model.addRow(vt);
+                }
+                lbBrandPageIndex.setText(String.valueOf(pageIndexBrand));
+            
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void getDetailTypes(boolean isRefresh) {
+        try {
+            List<DetailType> detailTypes = cacheDetailType.get(pageIndexDetailType);
+            if(detailTypes == null || isRefresh) {
+              String url = "/DetailTypes/list";
+               Map<String, String> params = new HashMap<>();
+               params.put("pageIndex", String.valueOf(pageIndexDetailType));
+               params.put("limit", String.valueOf(limitDetailType));
+
+               Map<Program.HttpHeader, String> headers = new HashMap<>();
+               headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+               headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+               String jsonData = Program.SendHttpGet(url, params, headers);
+
+               java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<DetailType>>>() {
+               }.getType();
+               ResponseModel<PagingModel<DetailType>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                detailTypes = response.getData().getItems();
+                totalPageDetailType = response.getData().getTotalPage();
+                cacheDetailType.put(pageIndexDetailType, detailTypes);
+            }
+            
+            DefaultTableModel model = (DefaultTableModel) tableDetailType.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+                model.setColumnCount(0);
+                model.setRowCount(0);
+                
+                model.addColumn("Id");
+                model.addColumn("Name");
+                model.addColumn("Code");
+                model.addColumn("Icon");
+                model.addColumn("Description");
+                model.addColumn("Parent Id");
+              
+               // model.addColumn("Avatar");
+                int size = detailTypes.size();
+                for (int i = 0; i < size; i++) {
+                    Vector vt = new Vector<>();
+                    vt.add(String.valueOf(detailTypes.get(i).getId()));
+                    vt.add(detailTypes.get(i).getName());
+                    vt.add(detailTypes.get(i).getCode());
+                    vt.add(detailTypes.get(i).getIcon());
+                    vt.add(detailTypes.get(i).getDescription());
+                    if(detailTypes.get(i).getParent() != null) {
+                        vt.add(String.valueOf(detailTypes.get(i).getParent().getId()));
+                    }
+                    model.addRow(vt);
+                }
+                lbDetailTypePageIndex.setText(String.valueOf(pageIndexDetailType));
+            
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     /**
      * Creates new form Dashboard
      */
@@ -153,89 +292,107 @@ public class Dashboard extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         tabApprove = new javax.swing.JTabbedPane();
         jPanel5 = new javax.swing.JPanel();
-        toolBarUser4 = new javax.swing.JToolBar();
-        btnUserAdd4 = new javax.swing.JButton();
-        btnUserEdit4 = new javax.swing.JButton();
-        btnUserRemove4 = new javax.swing.JButton();
-        btnUserRefresh4 = new javax.swing.JButton();
-        btnUserPrev4 = new javax.swing.JButton();
-        lbPageIndex4 = new javax.swing.JLabel();
-        btnUserNext4 = new javax.swing.JButton();
-        txtSearchTableUser4 = new javax.swing.JTextField();
-        btnTableUserSearch4 = new javax.swing.JButton();
-        jPanel18 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        tableUser4 = new javax.swing.JTable();
+        toolBarUser1 = new javax.swing.JToolBar();
+        btnUserAdd1 = new javax.swing.JButton();
+        btnUserEdit1 = new javax.swing.JButton();
+        btnUserRemove1 = new javax.swing.JButton();
+        btnUserRefresh1 = new javax.swing.JButton();
+        btnUserPrev1 = new javax.swing.JButton();
+        lbPageIndex1 = new javax.swing.JLabel();
+        btnUserNext1 = new javax.swing.JButton();
+        txtSearchTableUser1 = new javax.swing.JTextField();
+        btnTableUserSearch1 = new javax.swing.JButton();
+        jPanel10 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tableUser1 = new javax.swing.JTable();
         jPanel6 = new javax.swing.JPanel();
-        toolBarUser5 = new javax.swing.JToolBar();
-        btnUserAdd5 = new javax.swing.JButton();
-        btnUserEdit5 = new javax.swing.JButton();
-        btnUserRemove5 = new javax.swing.JButton();
-        btnUserRefresh5 = new javax.swing.JButton();
-        btnUserPrev5 = new javax.swing.JButton();
-        lbPageIndex5 = new javax.swing.JLabel();
-        btnUserNext5 = new javax.swing.JButton();
-        txtSearchTableUser5 = new javax.swing.JTextField();
-        btnTableUserSearch5 = new javax.swing.JButton();
-        jPanel19 = new javax.swing.JPanel();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        tableUser5 = new javax.swing.JTable();
+        toolBarUser2 = new javax.swing.JToolBar();
+        btnUserAdd2 = new javax.swing.JButton();
+        btnUserEdit2 = new javax.swing.JButton();
+        btnUserRemove2 = new javax.swing.JButton();
+        btnUserRefresh2 = new javax.swing.JButton();
+        btnUserPrev2 = new javax.swing.JButton();
+        lbPageIndex2 = new javax.swing.JLabel();
+        btnUserNext2 = new javax.swing.JButton();
+        txtSearchTableUser2 = new javax.swing.JTextField();
+        btnTableUserSearch2 = new javax.swing.JButton();
+        jPanel11 = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        tableUser2 = new javax.swing.JTable();
         jPanel7 = new javax.swing.JPanel();
+        toolBarUser3 = new javax.swing.JToolBar();
+        btnUserAdd3 = new javax.swing.JButton();
+        btnUserEdit3 = new javax.swing.JButton();
+        btnUserRemove3 = new javax.swing.JButton();
+        btnUserRefresh3 = new javax.swing.JButton();
+        btnUserPrev3 = new javax.swing.JButton();
+        lbPageIndex3 = new javax.swing.JLabel();
+        btnUserNext3 = new javax.swing.JButton();
+        txtSearchTableUser3 = new javax.swing.JTextField();
+        btnTableUserSearch3 = new javax.swing.JButton();
+        jPanel12 = new javax.swing.JPanel();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        tableUser3 = new javax.swing.JTable();
+        jPanel3 = new javax.swing.JPanel();
+        toolBarUser6 = new javax.swing.JToolBar();
+        btnBrandAdd = new javax.swing.JButton();
+        btnBrandEdit = new javax.swing.JButton();
+        btnBrandRemove = new javax.swing.JButton();
+        btnBrandRefresh = new javax.swing.JButton();
+        btnBrandPrev = new javax.swing.JButton();
+        lbBrandPageIndex = new javax.swing.JLabel();
+        btnBrandNext = new javax.swing.JButton();
+        txtSearchTableUser6 = new javax.swing.JTextField();
+        btnTableUserSearch6 = new javax.swing.JButton();
+        jPanel15 = new javax.swing.JPanel();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        tableBrand = new javax.swing.JTable();
+        jPanel4 = new javax.swing.JPanel();
+        jTabbedPane2 = new javax.swing.JTabbedPane();
+        jPanel18 = new javax.swing.JPanel();
         toolBarUser9 = new javax.swing.JToolBar();
-        btnUserAdd8 = new javax.swing.JButton();
-        btnUserEdit8 = new javax.swing.JButton();
-        btnUserRemove9 = new javax.swing.JButton();
-        btnUserRefresh9 = new javax.swing.JButton();
-        btnUserPrev9 = new javax.swing.JButton();
-        lbPageIndex9 = new javax.swing.JLabel();
-        btnUserNext9 = new javax.swing.JButton();
+        btnDetailTypeAdd = new javax.swing.JButton();
+        btnDetailTypeEdit = new javax.swing.JButton();
+        btnDetailTypeRemove = new javax.swing.JButton();
+        btnDetailTypeRefresh = new javax.swing.JButton();
+        btnDetailTypePrev = new javax.swing.JButton();
+        lbDetailTypePageIndex = new javax.swing.JLabel();
+        btnDetailTypeNext = new javax.swing.JButton();
         txtSearchTableUser9 = new javax.swing.JTextField();
         btnTableUserSearch9 = new javax.swing.JButton();
         jPanel20 = new javax.swing.JPanel();
-        jScrollPane7 = new javax.swing.JScrollPane();
-        tableUser9 = new javax.swing.JTable();
-        jPanel3 = new javax.swing.JPanel();
+        jScrollPane11 = new javax.swing.JScrollPane();
+        tableDetailType = new javax.swing.JTable();
+        jPanel19 = new javax.swing.JPanel();
         toolBarUser10 = new javax.swing.JToolBar();
-        btnUserAdd9 = new javax.swing.JButton();
-        btnUserEdit9 = new javax.swing.JButton();
-        btnUserRemove10 = new javax.swing.JButton();
-        btnUserRefresh10 = new javax.swing.JButton();
-        btnUserPrev10 = new javax.swing.JButton();
-        lbPageIndex10 = new javax.swing.JLabel();
-        btnUserNext10 = new javax.swing.JButton();
+        btnBrandAdd2 = new javax.swing.JButton();
+        btnBrandEdit2 = new javax.swing.JButton();
+        btnBrandRemove2 = new javax.swing.JButton();
+        btnBrandRefresh2 = new javax.swing.JButton();
+        btnBrandPrev2 = new javax.swing.JButton();
+        lbBrandPageIndex2 = new javax.swing.JLabel();
+        btnBrandNext2 = new javax.swing.JButton();
         txtSearchTableUser10 = new javax.swing.JTextField();
         btnTableUserSearch10 = new javax.swing.JButton();
         jPanel21 = new javax.swing.JPanel();
-        jScrollPane11 = new javax.swing.JScrollPane();
-        tableUser10 = new javax.swing.JTable();
-        jPanel4 = new javax.swing.JPanel();
-        toolBarUser11 = new javax.swing.JToolBar();
-        btnUserAdd10 = new javax.swing.JButton();
-        btnUserEdit10 = new javax.swing.JButton();
-        btnUserRemove11 = new javax.swing.JButton();
-        btnUserRefresh11 = new javax.swing.JButton();
-        btnUserPrev11 = new javax.swing.JButton();
-        lbPageIndex11 = new javax.swing.JLabel();
-        btnUserNext11 = new javax.swing.JButton();
-        txtSearchTableUser11 = new javax.swing.JTextField();
-        btnTableUserSearch11 = new javax.swing.JButton();
-        jPanel22 = new javax.swing.JPanel();
         jScrollPane12 = new javax.swing.JScrollPane();
-        tableUser11 = new javax.swing.JTable();
+        tableBrand2 = new javax.swing.JTable();
         jPanel9 = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel13 = new javax.swing.JPanel();
-        toolBarUser12 = new javax.swing.JToolBar();
-        btnUserRemove12 = new javax.swing.JButton();
-        btnUserRefresh12 = new javax.swing.JButton();
-        btnUserPrev12 = new javax.swing.JButton();
-        lbPageIndex12 = new javax.swing.JLabel();
-        btnUserNext12 = new javax.swing.JButton();
-        txtSearchTableUser12 = new javax.swing.JTextField();
-        btnTableUserSearch12 = new javax.swing.JButton();
-        jPanel23 = new javax.swing.JPanel();
-        jScrollPane13 = new javax.swing.JScrollPane();
-        tableUser12 = new javax.swing.JTable();
+        toolBarUser8 = new javax.swing.JToolBar();
+        btnUserAdd11 = new javax.swing.JButton();
+        btnUserEdit11 = new javax.swing.JButton();
+        btnUserRemove8 = new javax.swing.JButton();
+        btnUserRefresh8 = new javax.swing.JButton();
+        btnUserPrev8 = new javax.swing.JButton();
+        lbPageIndex8 = new javax.swing.JLabel();
+        btnUserNext8 = new javax.swing.JButton();
+        txtSearchTableUser8 = new javax.swing.JTextField();
+        btnTableUserSearch8 = new javax.swing.JButton();
+        jPanel17 = new javax.swing.JPanel();
+        jScrollPane10 = new javax.swing.JScrollPane();
+        tableUser8 = new javax.swing.JTable();
         jPanel14 = new javax.swing.JPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -252,7 +409,7 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser.setBorder(null);
         toolBarUser.setRollover(true);
 
-        btnUserAdd.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
+        btnUserAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
         btnUserAdd.setText("Thêm");
         buttonGroup1.add(btnUserAdd);
         btnUserAdd.setFocusable(false);
@@ -264,7 +421,7 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser.add(btnUserAdd);
 
-        btnUserEdit.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
+        btnUserEdit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
         btnUserEdit.setText("Sửa");
         btnUserEdit.setFocusable(false);
         btnUserEdit.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
@@ -275,7 +432,7 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser.add(btnUserEdit);
 
-        btnUserRemove.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
+        btnUserRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
         btnUserRemove.setText("Xoá");
         btnUserRemove.setFocusable(false);
         btnUserRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
@@ -286,7 +443,7 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser.add(btnUserRemove);
 
-        btnUserRefresh.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
+        btnUserRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
         btnUserRefresh.setText("Làm mới");
         btnUserRefresh.setFocusable(false);
         btnUserRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
@@ -297,7 +454,7 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser.add(btnUserRefresh);
 
-        btnUserPrev.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
+        btnUserPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
         btnUserPrev.setFocusable(false);
         btnUserPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnUserPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -314,7 +471,7 @@ public class Dashboard extends javax.swing.JFrame {
         lbPageIndex.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         toolBarUser.add(lbPageIndex);
 
-        btnUserNext.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
+        btnUserNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
         btnUserNext.setFocusable(false);
         btnUserNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnUserNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -399,112 +556,112 @@ public class Dashboard extends javax.swing.JFrame {
 
         tabDetail.addTab("Người dùng", jPanel1);
 
-        toolBarUser4.setBorder(null);
-        toolBarUser4.setRollover(true);
+        toolBarUser1.setBorder(null);
+        toolBarUser1.setRollover(true);
 
-        btnUserAdd4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
-        btnUserAdd4.setText("Thêm");
-        buttonGroup1.add(btnUserAdd4);
-        btnUserAdd4.setFocusable(false);
-        btnUserAdd4.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserAdd1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnUserAdd1.setText("Thêm");
+        buttonGroup1.add(btnUserAdd1);
+        btnUserAdd1.setFocusable(false);
+        btnUserAdd1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserAdd1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd4ActionPerformed(evt);
+                btnUserAdd1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserAdd4);
+        toolBarUser1.add(btnUserAdd1);
 
-        btnUserEdit4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
-        btnUserEdit4.setText("Sửa");
-        btnUserEdit4.setFocusable(false);
-        btnUserEdit4.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserEdit1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnUserEdit1.setText("Sửa");
+        btnUserEdit1.setFocusable(false);
+        btnUserEdit1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserEdit1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit4ActionPerformed(evt);
+                btnUserEdit1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserEdit4);
+        toolBarUser1.add(btnUserEdit1);
 
-        btnUserRemove4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove4.setText("Xoá");
-        btnUserRemove4.setFocusable(false);
-        btnUserRemove4.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRemove1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnUserRemove1.setText("Xoá");
+        btnUserRemove1.setFocusable(false);
+        btnUserRemove1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRemove1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove4ActionPerformed(evt);
+                btnUserRemove1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserRemove4);
+        toolBarUser1.add(btnUserRemove1);
 
-        btnUserRefresh4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh4.setText("Làm mới");
-        btnUserRefresh4.setFocusable(false);
-        btnUserRefresh4.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRefresh1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnUserRefresh1.setText("Làm mới");
+        btnUserRefresh1.setFocusable(false);
+        btnUserRefresh1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRefresh1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh4ActionPerformed(evt);
+                btnUserRefresh1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserRefresh4);
+        toolBarUser1.add(btnUserRefresh1);
 
-        btnUserPrev4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev4.setFocusable(false);
-        btnUserPrev4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserPrev1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnUserPrev1.setFocusable(false);
+        btnUserPrev1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserPrev1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserPrev1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev4ActionPerformed(evt);
+                btnUserPrev1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserPrev4);
+        toolBarUser1.add(btnUserPrev1);
 
-        lbPageIndex4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex4.setText("page");
-        lbPageIndex4.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser4.add(lbPageIndex4);
+        lbPageIndex1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndex1.setText("page");
+        lbPageIndex1.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndex1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser1.add(lbPageIndex1);
 
-        btnUserNext4.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext4.setFocusable(false);
-        btnUserNext4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext4.addActionListener(new java.awt.event.ActionListener() {
+        btnUserNext1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnUserNext1.setFocusable(false);
+        btnUserNext1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserNext1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserNext1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext4ActionPerformed(evt);
+                btnUserNext1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnUserNext4);
+        toolBarUser1.add(btnUserNext1);
 
-        txtSearchTableUser4.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser4.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser4.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser4.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableUser1.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableUser1.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableUser1.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser1.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
-        txtSearchTableUser4.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableUser1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser4MouseClicked(evt);
+                txtSearchTableUser1MouseClicked(evt);
             }
         });
-        txtSearchTableUser4.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableUser1.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser4KeyPressed(evt);
+                txtSearchTableUser1KeyPressed(evt);
             }
         });
-        toolBarUser4.add(txtSearchTableUser4);
+        toolBarUser1.add(txtSearchTableUser1);
 
-        btnTableUserSearch4.setText("Tìm kiếm");
-        btnTableUserSearch4.setFocusable(false);
-        btnTableUserSearch4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTableUserSearch4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTableUserSearch4.addActionListener(new java.awt.event.ActionListener() {
+        btnTableUserSearch1.setText("Tìm kiếm");
+        btnTableUserSearch1.setFocusable(false);
+        btnTableUserSearch1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableUserSearch4ActionPerformed(evt);
+                btnTableUserSearch1ActionPerformed(evt);
             }
         });
-        toolBarUser4.add(btnTableUserSearch4);
+        toolBarUser1.add(btnTableUserSearch1);
 
-        tableUser4.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser4.setModel(new javax.swing.table.DefaultTableModel(
+        tableUser1.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableUser1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -514,147 +671,147 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser4.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser4.setGridColor(java.awt.SystemColor.control);
-        tableUser4.setRowHeight(30);
-        tableUser4.setRowMargin(2);
-        tableUser4.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane2.setViewportView(tableUser4);
+        tableUser1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableUser1.setGridColor(java.awt.SystemColor.control);
+        tableUser1.setRowHeight(30);
+        tableUser1.setRowMargin(2);
+        tableUser1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane3.setViewportView(tableUser1);
 
-        javax.swing.GroupLayout jPanel18Layout = new javax.swing.GroupLayout(jPanel18);
-        jPanel18.setLayout(jPanel18Layout);
-        jPanel18Layout.setHorizontalGroup(
-            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
         );
-        jPanel18Layout.setVerticalGroup(
-            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(toolBarUser4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(toolBarUser1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(toolBarUser4, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(toolBarUser1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         tabApprove.addTab("Tất cả", jPanel5);
 
-        toolBarUser5.setBorder(null);
-        toolBarUser5.setRollover(true);
+        toolBarUser2.setBorder(null);
+        toolBarUser2.setRollover(true);
 
-        btnUserAdd5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
-        btnUserAdd5.setText("Thêm");
-        buttonGroup1.add(btnUserAdd5);
-        btnUserAdd5.setFocusable(false);
-        btnUserAdd5.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserAdd2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnUserAdd2.setText("Thêm");
+        buttonGroup1.add(btnUserAdd2);
+        btnUserAdd2.setFocusable(false);
+        btnUserAdd2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserAdd2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd5ActionPerformed(evt);
+                btnUserAdd2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserAdd5);
+        toolBarUser2.add(btnUserAdd2);
 
-        btnUserEdit5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
-        btnUserEdit5.setText("Sửa");
-        btnUserEdit5.setFocusable(false);
-        btnUserEdit5.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserEdit2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnUserEdit2.setText("Sửa");
+        btnUserEdit2.setFocusable(false);
+        btnUserEdit2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserEdit2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit5ActionPerformed(evt);
+                btnUserEdit2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserEdit5);
+        toolBarUser2.add(btnUserEdit2);
 
-        btnUserRemove5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove5.setText("Xoá");
-        btnUserRemove5.setFocusable(false);
-        btnUserRemove5.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRemove2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnUserRemove2.setText("Xoá");
+        btnUserRemove2.setFocusable(false);
+        btnUserRemove2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRemove2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove5ActionPerformed(evt);
+                btnUserRemove2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserRemove5);
+        toolBarUser2.add(btnUserRemove2);
 
-        btnUserRefresh5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh5.setText("Làm mới");
-        btnUserRefresh5.setFocusable(false);
-        btnUserRefresh5.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRefresh2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnUserRefresh2.setText("Làm mới");
+        btnUserRefresh2.setFocusable(false);
+        btnUserRefresh2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRefresh2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh5ActionPerformed(evt);
+                btnUserRefresh2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserRefresh5);
+        toolBarUser2.add(btnUserRefresh2);
 
-        btnUserPrev5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev5.setFocusable(false);
-        btnUserPrev5.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserPrev2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnUserPrev2.setFocusable(false);
+        btnUserPrev2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserPrev2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserPrev2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev5ActionPerformed(evt);
+                btnUserPrev2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserPrev5);
+        toolBarUser2.add(btnUserPrev2);
 
-        lbPageIndex5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex5.setText("page");
-        lbPageIndex5.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser5.add(lbPageIndex5);
+        lbPageIndex2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndex2.setText("page");
+        lbPageIndex2.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndex2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser2.add(lbPageIndex2);
 
-        btnUserNext5.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext5.setFocusable(false);
-        btnUserNext5.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext5.addActionListener(new java.awt.event.ActionListener() {
+        btnUserNext2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnUserNext2.setFocusable(false);
+        btnUserNext2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserNext2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserNext2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext5ActionPerformed(evt);
+                btnUserNext2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnUserNext5);
+        toolBarUser2.add(btnUserNext2);
 
-        txtSearchTableUser5.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser5.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser5.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser5.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableUser2.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableUser2.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableUser2.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser2.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
-        txtSearchTableUser5.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableUser2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser5MouseClicked(evt);
+                txtSearchTableUser2MouseClicked(evt);
             }
         });
-        txtSearchTableUser5.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableUser2.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser5KeyPressed(evt);
+                txtSearchTableUser2KeyPressed(evt);
             }
         });
-        toolBarUser5.add(txtSearchTableUser5);
+        toolBarUser2.add(txtSearchTableUser2);
 
-        btnTableUserSearch5.setText("Tìm kiếm");
-        btnTableUserSearch5.setFocusable(false);
-        btnTableUserSearch5.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTableUserSearch5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTableUserSearch5.addActionListener(new java.awt.event.ActionListener() {
+        btnTableUserSearch2.setText("Tìm kiếm");
+        btnTableUserSearch2.setFocusable(false);
+        btnTableUserSearch2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableUserSearch5ActionPerformed(evt);
+                btnTableUserSearch2ActionPerformed(evt);
             }
         });
-        toolBarUser5.add(btnTableUserSearch5);
+        toolBarUser2.add(btnTableUserSearch2);
 
-        tableUser5.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser5.setModel(new javax.swing.table.DefaultTableModel(
+        tableUser2.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableUser2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -664,120 +821,433 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser5.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser5.setGridColor(java.awt.SystemColor.control);
-        tableUser5.setRowHeight(30);
-        tableUser5.setRowMargin(2);
-        tableUser5.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane6.setViewportView(tableUser5);
+        tableUser2.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableUser2.setGridColor(java.awt.SystemColor.control);
+        tableUser2.setRowHeight(30);
+        tableUser2.setRowMargin(2);
+        tableUser2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane4.setViewportView(tableUser2);
 
-        javax.swing.GroupLayout jPanel19Layout = new javax.swing.GroupLayout(jPanel19);
-        jPanel19.setLayout(jPanel19Layout);
-        jPanel19Layout.setHorizontalGroup(
-            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
         );
-        jPanel19Layout.setVerticalGroup(
-            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(toolBarUser5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel19, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(toolBarUser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(toolBarUser5, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel19, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(toolBarUser2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         tabApprove.addTab("Đang chờ duyệt", jPanel6);
 
+        toolBarUser3.setBorder(null);
+        toolBarUser3.setRollover(true);
+
+        btnUserAdd3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnUserAdd3.setText("Thêm");
+        buttonGroup1.add(btnUserAdd3);
+        btnUserAdd3.setFocusable(false);
+        btnUserAdd3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserAdd3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserAdd3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserAdd3);
+
+        btnUserEdit3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnUserEdit3.setText("Sửa");
+        btnUserEdit3.setFocusable(false);
+        btnUserEdit3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserEdit3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserEdit3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserEdit3);
+
+        btnUserRemove3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnUserRemove3.setText("Xoá");
+        btnUserRemove3.setFocusable(false);
+        btnUserRemove3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRemove3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserRemove3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserRemove3);
+
+        btnUserRefresh3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnUserRefresh3.setText("Làm mới");
+        btnUserRefresh3.setFocusable(false);
+        btnUserRefresh3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRefresh3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserRefresh3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserRefresh3);
+
+        btnUserPrev3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnUserPrev3.setFocusable(false);
+        btnUserPrev3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserPrev3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserPrev3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserPrev3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserPrev3);
+
+        lbPageIndex3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndex3.setText("page");
+        lbPageIndex3.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndex3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser3.add(lbPageIndex3);
+
+        btnUserNext3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnUserNext3.setFocusable(false);
+        btnUserNext3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserNext3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserNext3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserNext3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnUserNext3);
+
+        txtSearchTableUser3.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableUser3.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableUser3.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser3.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtSearchTableUser3MouseClicked(evt);
+            }
+        });
+        txtSearchTableUser3.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtSearchTableUser3KeyPressed(evt);
+            }
+        });
+        toolBarUser3.add(txtSearchTableUser3);
+
+        btnTableUserSearch3.setText("Tìm kiếm");
+        btnTableUserSearch3.setFocusable(false);
+        btnTableUserSearch3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTableUserSearch3ActionPerformed(evt);
+            }
+        });
+        toolBarUser3.add(btnTableUserSearch3);
+
+        tableUser3.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableUser3.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+            }
+        ));
+        tableUser3.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableUser3.setGridColor(java.awt.SystemColor.control);
+        tableUser3.setRowHeight(30);
+        tableUser3.setRowMargin(2);
+        tableUser3.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane5.setViewportView(tableUser3);
+
+        javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
+        jPanel12.setLayout(jPanel12Layout);
+        jPanel12Layout.setHorizontalGroup(
+            jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        );
+        jPanel12Layout.setVerticalGroup(
+            jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(toolBarUser3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addComponent(toolBarUser3, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        tabApprove.addTab("Đã duyệt", jPanel7);
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(tabApprove)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(tabApprove)
+        );
+
+        tabDetail.addTab("Xe", jPanel2);
+
+        toolBarUser6.setBorder(null);
+        toolBarUser6.setRollover(true);
+
+        btnBrandAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnBrandAdd.setText("Thêm");
+        buttonGroup1.add(btnBrandAdd);
+        btnBrandAdd.setFocusable(false);
+        btnBrandAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandAddActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandAdd);
+
+        btnBrandEdit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnBrandEdit.setText("Sửa");
+        btnBrandEdit.setFocusable(false);
+        btnBrandEdit.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandEditActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandEdit);
+
+        btnBrandRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnBrandRemove.setText("Xoá");
+        btnBrandRemove.setFocusable(false);
+        btnBrandRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandRemove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandRemoveActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandRemove);
+
+        btnBrandRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnBrandRefresh.setText("Làm mới");
+        btnBrandRefresh.setFocusable(false);
+        btnBrandRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandRefreshActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandRefresh);
+
+        btnBrandPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnBrandPrev.setFocusable(false);
+        btnBrandPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnBrandPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnBrandPrev.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandPrevActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandPrev);
+
+        lbBrandPageIndex.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbBrandPageIndex.setText("page");
+        lbBrandPageIndex.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbBrandPageIndex.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser6.add(lbBrandPageIndex);
+
+        btnBrandNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnBrandNext.setFocusable(false);
+        btnBrandNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnBrandNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnBrandNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrandNextActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnBrandNext);
+
+        txtSearchTableUser6.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableUser6.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableUser6.setText("nhập tên, code.");
+        txtSearchTableUser6.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser6.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtSearchTableUser6MouseClicked(evt);
+            }
+        });
+        txtSearchTableUser6.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtSearchTableUser6KeyPressed(evt);
+            }
+        });
+        toolBarUser6.add(txtSearchTableUser6);
+
+        btnTableUserSearch6.setText("Tìm kiếm");
+        btnTableUserSearch6.setFocusable(false);
+        btnTableUserSearch6.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch6.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTableUserSearch6ActionPerformed(evt);
+            }
+        });
+        toolBarUser6.add(btnTableUserSearch6);
+
+        tableBrand.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableBrand.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+            }
+        ));
+        tableBrand.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableBrand.setGridColor(java.awt.SystemColor.control);
+        tableBrand.setRowHeight(30);
+        tableBrand.setRowMargin(2);
+        tableBrand.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane8.setViewportView(tableBrand);
+
+        javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
+        jPanel15.setLayout(jPanel15Layout);
+        jPanel15Layout.setHorizontalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 988, Short.MAX_VALUE)
+        );
+        jPanel15Layout.setVerticalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(toolBarUser6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addComponent(toolBarUser6, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        tabDetail.addTab("Thương Hiệu", jPanel3);
+
         toolBarUser9.setBorder(null);
         toolBarUser9.setRollover(true);
 
-        btnUserAdd8.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
-        btnUserAdd8.setText("Thêm");
-        buttonGroup1.add(btnUserAdd8);
-        btnUserAdd8.setFocusable(false);
-        btnUserAdd8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd8.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypeAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnDetailTypeAdd.setText("Thêm");
+        buttonGroup1.add(btnDetailTypeAdd);
+        btnDetailTypeAdd.setFocusable(false);
+        btnDetailTypeAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailTypeAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd8ActionPerformed(evt);
+                btnDetailTypeAddActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserAdd8);
+        toolBarUser9.add(btnDetailTypeAdd);
 
-        btnUserEdit8.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
-        btnUserEdit8.setText("Sửa");
-        btnUserEdit8.setFocusable(false);
-        btnUserEdit8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit8.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypeEdit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnDetailTypeEdit.setText("Sửa");
+        btnDetailTypeEdit.setFocusable(false);
+        btnDetailTypeEdit.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailTypeEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit8ActionPerformed(evt);
+                btnDetailTypeEditActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserEdit8);
+        toolBarUser9.add(btnDetailTypeEdit);
 
-        btnUserRemove9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove9.setText("Xoá");
-        btnUserRemove9.setFocusable(false);
-        btnUserRemove9.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove9.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypeRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnDetailTypeRemove.setText("Xoá");
+        btnDetailTypeRemove.setFocusable(false);
+        btnDetailTypeRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailTypeRemove.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove9ActionPerformed(evt);
+                btnDetailTypeRemoveActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserRemove9);
+        toolBarUser9.add(btnDetailTypeRemove);
 
-        btnUserRefresh9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh9.setText("Làm mới");
-        btnUserRefresh9.setFocusable(false);
-        btnUserRefresh9.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh9.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypeRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnDetailTypeRefresh.setText("Làm mới");
+        btnDetailTypeRefresh.setFocusable(false);
+        btnDetailTypeRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailTypeRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh9ActionPerformed(evt);
+                btnDetailTypeRefreshActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserRefresh9);
+        toolBarUser9.add(btnDetailTypeRefresh);
 
-        btnUserPrev9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev9.setFocusable(false);
-        btnUserPrev9.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev9.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev9.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypePrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnDetailTypePrev.setFocusable(false);
+        btnDetailTypePrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDetailTypePrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnDetailTypePrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev9ActionPerformed(evt);
+                btnDetailTypePrevActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserPrev9);
+        toolBarUser9.add(btnDetailTypePrev);
 
-        lbPageIndex9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex9.setText("page");
-        lbPageIndex9.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex9.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser9.add(lbPageIndex9);
+        lbDetailTypePageIndex.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbDetailTypePageIndex.setText("page");
+        lbDetailTypePageIndex.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbDetailTypePageIndex.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser9.add(lbDetailTypePageIndex);
 
-        btnUserNext9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext9.setFocusable(false);
-        btnUserNext9.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext9.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext9.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailTypeNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnDetailTypeNext.setFocusable(false);
+        btnDetailTypeNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDetailTypeNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnDetailTypeNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext9ActionPerformed(evt);
+                btnDetailTypeNextActionPerformed(evt);
             }
         });
-        toolBarUser9.add(btnUserNext9);
+        toolBarUser9.add(btnDetailTypeNext);
 
         txtSearchTableUser9.setForeground(new java.awt.Color(204, 204, 204));
         txtSearchTableUser9.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser9.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser9.setText("nhập tên, code.");
         txtSearchTableUser9.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
         txtSearchTableUser9.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -803,8 +1273,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser9.add(btnTableUserSearch9);
 
-        tableUser9.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser9.setModel(new javax.swing.table.DefaultTableModel(
+        tableDetailType.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableDetailType.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -814,133 +1284,120 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser9.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser9.setGridColor(java.awt.SystemColor.control);
-        tableUser9.setRowHeight(30);
-        tableUser9.setRowMargin(2);
-        tableUser9.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane7.setViewportView(tableUser9);
+        tableDetailType.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableDetailType.setGridColor(java.awt.SystemColor.control);
+        tableDetailType.setRowHeight(30);
+        tableDetailType.setRowMargin(2);
+        tableDetailType.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane11.setViewportView(tableDetailType);
 
         javax.swing.GroupLayout jPanel20Layout = new javax.swing.GroupLayout(jPanel20);
         jPanel20.setLayout(jPanel20Layout);
         jPanel20Layout.setHorizontalGroup(
             jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+            .addComponent(jScrollPane11, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
         );
         jPanel20Layout.setVerticalGroup(
             jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+            .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
         );
 
-        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-        jPanel7.setLayout(jPanel7Layout);
-        jPanel7Layout.setHorizontalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout jPanel18Layout = new javax.swing.GroupLayout(jPanel18);
+        jPanel18.setLayout(jPanel18Layout);
+        jPanel18Layout.setHorizontalGroup(
+            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(toolBarUser9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel20, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        jPanel7Layout.setVerticalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
+        jPanel18Layout.setVerticalGroup(
+            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel18Layout.createSequentialGroup()
                 .addComponent(toolBarUser9, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel20, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        tabApprove.addTab("Đã duyệt", jPanel7);
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabApprove)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabApprove)
-        );
-
-        tabDetail.addTab("Xe", jPanel2);
+        jTabbedPane2.addTab("Loại đặc điểm", jPanel18);
 
         toolBarUser10.setBorder(null);
         toolBarUser10.setRollover(true);
 
-        btnUserAdd9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
-        btnUserAdd9.setText("Thêm");
-        buttonGroup1.add(btnUserAdd9);
-        btnUserAdd9.setFocusable(false);
-        btnUserAdd9.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd9.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandAdd2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnBrandAdd2.setText("Thêm");
+        buttonGroup1.add(btnBrandAdd2);
+        btnBrandAdd2.setFocusable(false);
+        btnBrandAdd2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandAdd2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd9ActionPerformed(evt);
+                btnBrandAdd2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserAdd9);
+        toolBarUser10.add(btnBrandAdd2);
 
-        btnUserEdit9.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
-        btnUserEdit9.setText("Sửa");
-        btnUserEdit9.setFocusable(false);
-        btnUserEdit9.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit9.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandEdit2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnBrandEdit2.setText("Sửa");
+        btnBrandEdit2.setFocusable(false);
+        btnBrandEdit2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandEdit2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit9ActionPerformed(evt);
+                btnBrandEdit2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserEdit9);
+        toolBarUser10.add(btnBrandEdit2);
 
-        btnUserRemove10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove10.setText("Xoá");
-        btnUserRemove10.setFocusable(false);
-        btnUserRemove10.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove10.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandRemove2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnBrandRemove2.setText("Xoá");
+        btnBrandRemove2.setFocusable(false);
+        btnBrandRemove2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandRemove2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove10ActionPerformed(evt);
+                btnBrandRemove2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserRemove10);
+        toolBarUser10.add(btnBrandRemove2);
 
-        btnUserRefresh10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh10.setText("Làm mới");
-        btnUserRefresh10.setFocusable(false);
-        btnUserRefresh10.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh10.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandRefresh2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnBrandRefresh2.setText("Làm mới");
+        btnBrandRefresh2.setFocusable(false);
+        btnBrandRefresh2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnBrandRefresh2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh10ActionPerformed(evt);
+                btnBrandRefresh2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserRefresh10);
+        toolBarUser10.add(btnBrandRefresh2);
 
-        btnUserPrev10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev10.setFocusable(false);
-        btnUserPrev10.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev10.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev10.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandPrev2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnBrandPrev2.setFocusable(false);
+        btnBrandPrev2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnBrandPrev2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnBrandPrev2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev10ActionPerformed(evt);
+                btnBrandPrev2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserPrev10);
+        toolBarUser10.add(btnBrandPrev2);
 
-        lbPageIndex10.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex10.setText("page");
-        lbPageIndex10.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex10.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser10.add(lbPageIndex10);
+        lbBrandPageIndex2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbBrandPageIndex2.setText("page");
+        lbBrandPageIndex2.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbBrandPageIndex2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser10.add(lbBrandPageIndex2);
 
-        btnUserNext10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext10.setFocusable(false);
-        btnUserNext10.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext10.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext10.addActionListener(new java.awt.event.ActionListener() {
+        btnBrandNext2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnBrandNext2.setFocusable(false);
+        btnBrandNext2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnBrandNext2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnBrandNext2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext10ActionPerformed(evt);
+                btnBrandNext2ActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnUserNext10);
+        toolBarUser10.add(btnBrandNext2);
 
         txtSearchTableUser10.setForeground(new java.awt.Color(204, 204, 204));
         txtSearchTableUser10.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser10.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser10.setText("nhập tên, code.");
         txtSearchTableUser10.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
         txtSearchTableUser10.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -966,8 +1423,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser10.add(btnTableUserSearch10);
 
-        tableUser10.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser10.setModel(new javax.swing.table.DefaultTableModel(
+        tableBrand2.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableBrand2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -977,274 +1434,160 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser10.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser10.setGridColor(java.awt.SystemColor.control);
-        tableUser10.setRowHeight(30);
-        tableUser10.setRowMargin(2);
-        tableUser10.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane11.setViewportView(tableUser10);
+        tableBrand2.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableBrand2.setGridColor(java.awt.SystemColor.control);
+        tableBrand2.setRowHeight(30);
+        tableBrand2.setRowMargin(2);
+        tableBrand2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane12.setViewportView(tableBrand2);
 
         javax.swing.GroupLayout jPanel21Layout = new javax.swing.GroupLayout(jPanel21);
         jPanel21.setLayout(jPanel21Layout);
         jPanel21Layout.setHorizontalGroup(
             jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane11, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 988, Short.MAX_VALUE)
+            .addComponent(jScrollPane12, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
         );
         jPanel21Layout.setVerticalGroup(
             jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+            .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
         );
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout jPanel19Layout = new javax.swing.GroupLayout(jPanel19);
+        jPanel19.setLayout(jPanel19Layout);
+        jPanel19Layout.setHorizontalGroup(
+            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(toolBarUser10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        jPanel19Layout.setVerticalGroup(
+            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel19Layout.createSequentialGroup()
                 .addComponent(toolBarUser10, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        tabDetail.addTab("Thương Hiệu", jPanel3);
-
-        toolBarUser11.setBorder(null);
-        toolBarUser11.setRollover(true);
-
-        btnUserAdd10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\add.png")); // NOI18N
-        btnUserAdd10.setText("Thêm");
-        buttonGroup1.add(btnUserAdd10);
-        btnUserAdd10.setFocusable(false);
-        btnUserAdd10.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd10ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserAdd10);
-
-        btnUserEdit10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\edit.png")); // NOI18N
-        btnUserEdit10.setText("Sửa");
-        btnUserEdit10.setFocusable(false);
-        btnUserEdit10.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit10ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserEdit10);
-
-        btnUserRemove11.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove11.setText("Xoá");
-        btnUserRemove11.setFocusable(false);
-        btnUserRemove11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove11ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserRemove11);
-
-        btnUserRefresh11.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh11.setText("Làm mới");
-        btnUserRefresh11.setFocusable(false);
-        btnUserRefresh11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh11ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserRefresh11);
-
-        btnUserPrev11.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev11.setFocusable(false);
-        btnUserPrev11.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev11ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserPrev11);
-
-        lbPageIndex11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex11.setText("page");
-        lbPageIndex11.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser11.add(lbPageIndex11);
-
-        btnUserNext11.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext11.setFocusable(false);
-        btnUserNext11.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext11ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnUserNext11);
-
-        txtSearchTableUser11.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser11.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser11.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser11.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
-        txtSearchTableUser11.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser11MouseClicked(evt);
-            }
-        });
-        txtSearchTableUser11.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser11KeyPressed(evt);
-            }
-        });
-        toolBarUser11.add(txtSearchTableUser11);
-
-        btnTableUserSearch11.setText("Tìm kiếm");
-        btnTableUserSearch11.setFocusable(false);
-        btnTableUserSearch11.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTableUserSearch11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTableUserSearch11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableUserSearch11ActionPerformed(evt);
-            }
-        });
-        toolBarUser11.add(btnTableUserSearch11);
-
-        tableUser11.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser11.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
-            }
-        ));
-        tableUser11.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser11.setGridColor(java.awt.SystemColor.control);
-        tableUser11.setRowHeight(30);
-        tableUser11.setRowMargin(2);
-        tableUser11.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane12.setViewportView(tableUser11);
-
-        javax.swing.GroupLayout jPanel22Layout = new javax.swing.GroupLayout(jPanel22);
-        jPanel22.setLayout(jPanel22Layout);
-        jPanel22Layout.setHorizontalGroup(
-            jPanel22Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane12, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 988, Short.MAX_VALUE)
-        );
-        jPanel22Layout.setVerticalGroup(
-            jPanel22Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
-        );
+        jTabbedPane2.addTab("Đặc điểm", jPanel19);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(toolBarUser11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jTabbedPane2)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(toolBarUser11, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jTabbedPane2)
         );
 
         tabDetail.addTab("Đặc Điểm, Tính Năng", jPanel4);
 
-        toolBarUser12.setBorder(null);
-        toolBarUser12.setRollover(true);
+        toolBarUser8.setBorder(null);
+        toolBarUser8.setRollover(true);
 
-        btnUserRemove12.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\remove.png")); // NOI18N
-        btnUserRemove12.setText("Xoá");
-        btnUserRemove12.setFocusable(false);
-        btnUserRemove12.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove12.addActionListener(new java.awt.event.ActionListener() {
+        btnUserAdd11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnUserAdd11.setText("Thêm");
+        buttonGroup1.add(btnUserAdd11);
+        btnUserAdd11.setFocusable(false);
+        btnUserAdd11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserAdd11.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove12ActionPerformed(evt);
+                btnUserAdd11ActionPerformed(evt);
             }
         });
-        toolBarUser12.add(btnUserRemove12);
+        toolBarUser8.add(btnUserAdd11);
 
-        btnUserRefresh12.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-refresh-24.png")); // NOI18N
-        btnUserRefresh12.setText("Làm mới");
-        btnUserRefresh12.setFocusable(false);
-        btnUserRefresh12.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh12.addActionListener(new java.awt.event.ActionListener() {
+        btnUserEdit11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnUserEdit11.setText("Sửa");
+        btnUserEdit11.setFocusable(false);
+        btnUserEdit11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserEdit11.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh12ActionPerformed(evt);
+                btnUserEdit11ActionPerformed(evt);
             }
         });
-        toolBarUser12.add(btnUserRefresh12);
+        toolBarUser8.add(btnUserEdit11);
 
-        btnUserPrev12.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-rewind-button-round-24.png")); // NOI18N
-        btnUserPrev12.setFocusable(false);
-        btnUserPrev12.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev12.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev12.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRemove8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnUserRemove8.setText("Xoá");
+        btnUserRemove8.setFocusable(false);
+        btnUserRemove8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRemove8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev12ActionPerformed(evt);
+                btnUserRemove8ActionPerformed(evt);
             }
         });
-        toolBarUser12.add(btnUserPrev12);
+        toolBarUser8.add(btnUserRemove8);
 
-        lbPageIndex12.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex12.setText("page");
-        lbPageIndex12.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex12.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser12.add(lbPageIndex12);
-
-        btnUserNext12.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-fast-forward-round-24.png")); // NOI18N
-        btnUserNext12.setFocusable(false);
-        btnUserNext12.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext12.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext12.addActionListener(new java.awt.event.ActionListener() {
+        btnUserRefresh8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnUserRefresh8.setText("Làm mới");
+        btnUserRefresh8.setFocusable(false);
+        btnUserRefresh8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRefresh8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext12ActionPerformed(evt);
+                btnUserRefresh8ActionPerformed(evt);
             }
         });
-        toolBarUser12.add(btnUserNext12);
+        toolBarUser8.add(btnUserRefresh8);
 
-        txtSearchTableUser12.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser12.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser12.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser12.setMinimumSize(new java.awt.Dimension(500, 500));
+        btnUserPrev8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnUserPrev8.setFocusable(false);
+        btnUserPrev8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserPrev8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserPrev8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserPrev8ActionPerformed(evt);
+            }
+        });
+        toolBarUser8.add(btnUserPrev8);
+
+        lbPageIndex8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndex8.setText("page");
+        lbPageIndex8.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndex8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser8.add(lbPageIndex8);
+
+        btnUserNext8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnUserNext8.setFocusable(false);
+        btnUserNext8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnUserNext8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUserNext8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserNext8ActionPerformed(evt);
+            }
+        });
+        toolBarUser8.add(btnUserNext8);
+
+        txtSearchTableUser8.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableUser8.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableUser8.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser8.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
-        txtSearchTableUser12.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableUser8.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser12MouseClicked(evt);
+                txtSearchTableUser8MouseClicked(evt);
             }
         });
-        txtSearchTableUser12.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableUser8.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser12KeyPressed(evt);
+                txtSearchTableUser8KeyPressed(evt);
             }
         });
-        toolBarUser12.add(txtSearchTableUser12);
+        toolBarUser8.add(txtSearchTableUser8);
 
-        btnTableUserSearch12.setText("Tìm kiếm");
-        btnTableUserSearch12.setFocusable(false);
-        btnTableUserSearch12.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTableUserSearch12.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTableUserSearch12.addActionListener(new java.awt.event.ActionListener() {
+        btnTableUserSearch8.setText("Tìm kiếm");
+        btnTableUserSearch8.setFocusable(false);
+        btnTableUserSearch8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableUserSearch12ActionPerformed(evt);
+                btnTableUserSearch8ActionPerformed(evt);
             }
         });
-        toolBarUser12.add(btnTableUserSearch12);
+        toolBarUser8.add(btnTableUserSearch8);
 
-        tableUser12.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser12.setModel(new javax.swing.table.DefaultTableModel(
+        tableUser8.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableUser8.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -1254,37 +1597,37 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser12.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser12.setGridColor(java.awt.SystemColor.control);
-        tableUser12.setRowHeight(30);
-        tableUser12.setRowMargin(2);
-        tableUser12.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane13.setViewportView(tableUser12);
+        tableUser8.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableUser8.setGridColor(java.awt.SystemColor.control);
+        tableUser8.setRowHeight(30);
+        tableUser8.setRowMargin(2);
+        tableUser8.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane10.setViewportView(tableUser8);
 
-        javax.swing.GroupLayout jPanel23Layout = new javax.swing.GroupLayout(jPanel23);
-        jPanel23.setLayout(jPanel23Layout);
-        jPanel23Layout.setHorizontalGroup(
-            jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane13, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
+        jPanel17.setLayout(jPanel17Layout);
+        jPanel17Layout.setHorizontalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane10, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
         );
-        jPanel23Layout.setVerticalGroup(
-            jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane13, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+        jPanel17Layout.setVerticalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
         jPanel13.setLayout(jPanel13Layout);
         jPanel13Layout.setHorizontalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(toolBarUser12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel23, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(toolBarUser8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel13Layout.createSequentialGroup()
-                .addComponent(toolBarUser12, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel23, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(toolBarUser8, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Log", jPanel13);
@@ -1315,7 +1658,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         tabDetail.addTab("Cấu hình", jPanel9);
 
-        jMenu1.setIcon(new javax.swing.ImageIcon("D:\\Project\\Project Netbean\\BOOKING_CAR\\resource\\icons8-settings-24.png")); // NOI18N
+        jMenu1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-settings-24.png"))); // NOI18N
         jMenu1.setText("Cài đặt");
 
         jMenuItem1.setText("Thông tin cá nhân");
@@ -1345,40 +1688,295 @@ public class Dashboard extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnUserAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAddActionPerformed
-        add.run();
-    }//GEN-LAST:event_btnUserAddActionPerformed
+    private void btnUserAdd1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserAdd1ActionPerformed
 
-    private void btnUserEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEditActionPerformed
-        int row = tableUser.getSelectedRow();
+    private void btnUserEdit1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserEdit1ActionPerformed
+
+    private void btnUserRemove1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRemove1ActionPerformed
+
+    private void btnUserRefresh1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRefresh1ActionPerformed
+
+    private void btnUserPrev1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserPrev1ActionPerformed
+
+    private void btnUserNext1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserNext1ActionPerformed
+
+    private void txtSearchTableUser1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser1MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser1MouseClicked
+
+    private void txtSearchTableUser1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser1KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser1KeyPressed
+
+    private void btnTableUserSearch1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTableUserSearch1ActionPerformed
+
+    private void btnUserAdd2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserAdd2ActionPerformed
+
+    private void btnUserEdit2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserEdit2ActionPerformed
+
+    private void btnUserRemove2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRemove2ActionPerformed
+
+    private void btnUserRefresh2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRefresh2ActionPerformed
+
+    private void btnUserPrev2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserPrev2ActionPerformed
+
+    private void btnUserNext2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserNext2ActionPerformed
+
+    private void txtSearchTableUser2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser2MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser2MouseClicked
+
+    private void txtSearchTableUser2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser2KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser2KeyPressed
+
+    private void btnTableUserSearch2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTableUserSearch2ActionPerformed
+
+    private void btnUserAdd3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserAdd3ActionPerformed
+
+    private void btnUserEdit3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserEdit3ActionPerformed
+
+    private void btnUserRemove3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRemove3ActionPerformed
+
+    private void btnUserRefresh3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRefresh3ActionPerformed
+
+    private void btnUserPrev3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserPrev3ActionPerformed
+
+    private void btnUserNext3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserNext3ActionPerformed
+
+    private void txtSearchTableUser3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser3MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser3MouseClicked
+
+    private void txtSearchTableUser3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser3KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser3KeyPressed
+
+    private void btnTableUserSearch3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTableUserSearch3ActionPerformed
+
+    private void btnBrandAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandAddActionPerformed
+        new ptit.webservice.UI.Brand.add().run();
+    }//GEN-LAST:event_btnBrandAddActionPerformed
+
+    private void btnBrandEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandEditActionPerformed
+        int row = tableBrand.getSelectedRow();
         try {
-            String username = (String) tableUser.getModel().getValueAt(row, 1);
-            String email = (String) tableUser.getModel().getValueAt(row, 2);
-            String phoneNumber = (String) tableUser.getModel().getValueAt(row, 3);
-            String name = (String) tableUser.getModel().getValueAt(row, 4);
-            AppUser appUser = new AppUser();
-            appUser.setEmail(email);
-            appUser.setUsername(username);
-            appUser.setPhoneNumber(phoneNumber);
-            appUser.setName(name);
-            new edit().run(appUser);
+            String id = (String) tableBrand.getModel().getValueAt(row, 0);
+            String name = (String) tableBrand.getModel().getValueAt(row, 1);
+            String code = (String) tableBrand.getModel().getValueAt(row, 2);
+            Brand brand = new Brand();
+            brand.setId(Integer.parseInt(id.trim()));
+            brand.setName(name);
+            brand.setCode(code);
+            new ptit.webservice.UI.Brand.edit().run(brand);
         } catch (Exception e) {
-
+            
         }
+    }//GEN-LAST:event_btnBrandEditActionPerformed
 
-    }//GEN-LAST:event_btnUserEditActionPerformed
+    private void btnBrandRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRemoveActionPerformed
+        int row = tableBrand.getSelectedRow();
+        try {
+            String id = (String) tableBrand.getModel().getValueAt(row, 0);
+            int result = JOptionPane.showConfirmDialog(null, "Bạn có chắc muốn xoá brand id= " + id + "", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+            if (result == JOptionPane.OK_OPTION) {
+                deleteBrand(Integer.parseInt(id.trim()));
+            }
+        } catch (HeadlessException | IOException e) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hàng cần xoá", "Thông báo", TrayIcon.MessageType.INFO.ordinal(), null);
+        }
+    }//GEN-LAST:event_btnBrandRemoveActionPerformed
+
+    private void deleteBrand(int id) throws ProtocolException, IOException {
+        // call API
+        String url = "/Brands";
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("id", String.valueOf(id));
+        Map<Program.HttpHeader, String> headers = new HashMap<>();
+        headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+
+        String jsonData = Program.SendHttp(url, Program.HttpMethod.DELETE, null, queryParams, headers);
+        Map<String, Object> response = new Gson().fromJson(jsonData, Map.class);
+        boolean isSuccess = (boolean) response.get("success");
+        if (!isSuccess) {
+            String message = (String) response.get("message");
+            JOptionPane.showMessageDialog(this, message, "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } else {
+            JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
+        }
+    }
+    
+    private void deleteDetailType(int id) throws ProtocolException, IOException {
+        // call API
+        String url = "/DetailTypes";
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("id", String.valueOf(id));
+        Map<Program.HttpHeader, String> headers = new HashMap<>();
+        headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+
+        String jsonData = Program.SendHttp(url, Program.HttpMethod.DELETE, null, queryParams, headers);
+        Map<String, Object> response = new Gson().fromJson(jsonData, Map.class);
+        boolean isSuccess = (boolean) response.get("success");
+        if (!isSuccess) {
+            String message = (String) response.get("message");
+            JOptionPane.showMessageDialog(this, message, "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } else {
+            JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
+        }
+    }
+    
+    private void btnBrandRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRefreshActionPerformed
+        new Thread(() -> {
+            getBrands(true);
+        }).start();
+
+    }//GEN-LAST:event_btnBrandRefreshActionPerformed
+
+    private void btnBrandPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandPrevActionPerformed
+        int temp = pageIndexBrand - 1;
+        if((temp + 1) > 1) {
+            pageIndexBrand--;
+            new Thread(() -> {
+                getBrands(false);
+            }).start();
+        }else {
+            pageIndexBrand = 1;
+        }
+    }//GEN-LAST:event_btnBrandPrevActionPerformed
+
+    private void btnBrandNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandNextActionPerformed
+        int temp = pageIndexBrand + 1;
+        if(temp <= pageIndexBrand) {
+            pageIndexBrand++;
+             new Thread(() -> {
+                getBrands(false);
+            }).start();
+        }else {
+            pageIndexBrand = totalPageBrand;
+        }
+    }//GEN-LAST:event_btnBrandNextActionPerformed
+
+    private void txtSearchTableUser6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser6MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser6MouseClicked
+
+    private void txtSearchTableUser6KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser6KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser6KeyPressed
+
+    private void btnTableUserSearch6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch6ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTableUserSearch6ActionPerformed
+
+    private void btnUserAdd11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd11ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserAdd11ActionPerformed
+
+    private void btnUserEdit11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit11ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserEdit11ActionPerformed
+
+    private void btnUserRemove8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove8ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRemove8ActionPerformed
+
+    private void btnUserRefresh8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh8ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserRefresh8ActionPerformed
+
+    private void btnUserPrev8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev8ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserPrev8ActionPerformed
+
+    private void btnUserNext8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext8ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUserNext8ActionPerformed
+
+    private void txtSearchTableUser8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser8MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser8MouseClicked
+
+    private void txtSearchTableUser8KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser8KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchTableUser8KeyPressed
+
+    private void btnTableUserSearch8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch8ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTableUserSearch8ActionPerformed
+
+    private void btnTableUserSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearchActionPerformed
+        String text = txtSearchTableUser.getText();
+        searchTableContents(text);
+    }//GEN-LAST:event_btnTableUserSearchActionPerformed
+
+    private void txtSearchTableUserKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUserKeyPressed
+        if (txtSearchTableUser.getForeground() != Color.BLACK) {
+            txtSearchTableUser.setForeground(Color.BLACK);
+            txtSearchTableUser.setText("");
+            txtSearchTableUser.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableUserKeyPressed
+
+    private void txtSearchTableUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUserMouseClicked
+        if (txtSearchTableUser.getForeground() != Color.BLACK) {
+            txtSearchTableUser.setForeground(Color.BLACK);
+            txtSearchTableUser.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableUserMouseClicked
 
     private void btnUserNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNextActionPerformed
         int temp = pageIndexUser + 1;
         if(temp <= totalPageUser) {
             pageIndexUser++;
-             new Thread(() -> {
+            new Thread(() -> {
                 getUsers(false);
             }).start();
         }else {
             pageIndexUser = totalPageUser;
         }
-        
+
     }//GEN-LAST:event_btnUserNextActionPerformed
 
     private void btnUserPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrevActionPerformed
@@ -1410,124 +2008,102 @@ public class Dashboard extends javax.swing.JFrame {
         } catch (HeadlessException | IOException e) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn hàng cần xoá", "Thông báo", TrayIcon.MessageType.INFO.ordinal(), null);
         }
-
     }//GEN-LAST:event_btnUserRemoveActionPerformed
 
-    private void txtSearchTableUserKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUserKeyPressed
-        if (txtSearchTableUser.getForeground() != Color.BLACK) {
-            txtSearchTableUser.setForeground(Color.BLACK);
-            txtSearchTableUser.setText("");
-            txtSearchTableUser.setText(String.valueOf(evt.getKeyChar()));
+    private void btnUserEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEditActionPerformed
+        int row = tableUser.getSelectedRow();
+        try {
+            String username = (String) tableUser.getModel().getValueAt(row, 1);
+            String email = (String) tableUser.getModel().getValueAt(row, 2);
+            String phoneNumber = (String) tableUser.getModel().getValueAt(row, 3);
+            String name = (String) tableUser.getModel().getValueAt(row, 4);
+            AppUser appUser = new AppUser();
+            appUser.setEmail(email);
+            appUser.setUsername(username);
+            appUser.setPhoneNumber(phoneNumber);
+            appUser.setName(name);
+            new edit().run(appUser);
+        } catch (Exception e) {
+
         }
-    }//GEN-LAST:event_txtSearchTableUserKeyPressed
+    }//GEN-LAST:event_btnUserEditActionPerformed
 
-    private void btnTableUserSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearchActionPerformed
-        String text = txtSearchTableUser.getText();
-        searchTableContents(text);
-    }//GEN-LAST:event_btnTableUserSearchActionPerformed
+    private void btnUserAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAddActionPerformed
+        add.run();
+    }//GEN-LAST:event_btnUserAddActionPerformed
 
-    private void txtSearchTableUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUserMouseClicked
-        if (txtSearchTableUser.getForeground() != Color.BLACK) {
-            txtSearchTableUser.setForeground(Color.BLACK);
-            txtSearchTableUser.setText("");
+    private void btnDetailTypeAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeAddActionPerformed
+        new ptit.webservice.UI.DetailType.add().run();
+    }//GEN-LAST:event_btnDetailTypeAddActionPerformed
+
+    private void btnDetailTypeEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeEditActionPerformed
+         int row = tableDetailType.getSelectedRow();
+        try {
+            String id = (String) tableDetailType.getModel().getValueAt(row, 0);
+            String name = (String) tableDetailType.getModel().getValueAt(row, 1);
+            String code = (String) tableDetailType.getModel().getValueAt(row, 2);
+            String icon = (String) tableDetailType.getModel().getValueAt(row, 3);
+            String description = (String) tableDetailType.getModel().getValueAt(row, 4);
+            String parentId = (String) tableDetailType.getModel().getValueAt(row, 5);
+           
+            DetailType dt = new DetailType();
+            dt.setId(Integer.parseInt(id.trim()));
+            dt.setName(name);
+            dt.setCode(code);
+            dt.setIcon(icon);
+            dt.setDescription(description);
+            if(parentId != null) {
+                dt.setParentId(Integer.parseInt(parentId.trim()));
+            }
+            new ptit.webservice.UI.DetailType.edit().run(dt);
+            
+        } catch (Exception e) {
+             e.printStackTrace();
         }
-    }//GEN-LAST:event_txtSearchTableUserMouseClicked
+    }//GEN-LAST:event_btnDetailTypeEditActionPerformed
 
-    private void btnUserAdd4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd4ActionPerformed
+    private void btnDetailTypeRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeRemoveActionPerformed
+        int row = tableDetailType.getSelectedRow();
+        try {
+            String id = (String) tableDetailType.getModel().getValueAt(row, 0);
+            int result = JOptionPane.showConfirmDialog(null, "Bạn có chắc muốn xoá DetailType id: " + id + "", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+            if (result == JOptionPane.OK_OPTION) {
+                deleteDetailType(Integer.parseInt(id.trim()));
+            }
+        } catch (HeadlessException | IOException e) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hàng cần xoá", "Thông báo", TrayIcon.MessageType.INFO.ordinal(), null);
+        }
+    }//GEN-LAST:event_btnDetailTypeRemoveActionPerformed
 
-    private void btnUserEdit4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit4ActionPerformed
+    private void btnDetailTypeRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeRefreshActionPerformed
+        new Thread(() -> {
+            getDetailTypes(true);
+        }).start();
+    }//GEN-LAST:event_btnDetailTypeRefreshActionPerformed
 
-    private void btnUserRemove4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove4ActionPerformed
+    private void btnDetailTypePrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypePrevActionPerformed
+      int temp = pageIndexDetailType - 1;
+        if((temp + 1) > 1) {
+            pageIndexDetailType--;
+            new Thread(() -> {
+                getDetailTypes(false);
+            }).start();
+        }else {
+            pageIndexDetailType = 1;
+        }
+    }//GEN-LAST:event_btnDetailTypePrevActionPerformed
 
-    private void btnUserRefresh4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh4ActionPerformed
-
-    private void btnUserPrev4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev4ActionPerformed
-
-    private void btnUserNext4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext4ActionPerformed
-
-    private void txtSearchTableUser4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser4MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser4MouseClicked
-
-    private void txtSearchTableUser4KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser4KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser4KeyPressed
-
-    private void btnTableUserSearch4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnTableUserSearch4ActionPerformed
-
-    private void btnUserAdd5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd5ActionPerformed
-
-    private void btnUserEdit5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit5ActionPerformed
-
-    private void btnUserRemove5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove5ActionPerformed
-
-    private void btnUserRefresh5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh5ActionPerformed
-
-    private void btnUserPrev5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev5ActionPerformed
-
-    private void btnUserNext5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext5ActionPerformed
-
-    private void txtSearchTableUser5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser5MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser5MouseClicked
-
-    private void txtSearchTableUser5KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser5KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser5KeyPressed
-
-    private void btnTableUserSearch5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnTableUserSearch5ActionPerformed
-
-    private void btnUserAdd8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd8ActionPerformed
-
-    private void btnUserEdit8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit8ActionPerformed
-
-    private void btnUserRemove9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove9ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove9ActionPerformed
-
-    private void btnUserRefresh9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh9ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh9ActionPerformed
-
-    private void btnUserPrev9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev9ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev9ActionPerformed
-
-    private void btnUserNext9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext9ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext9ActionPerformed
+    private void btnDetailTypeNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeNextActionPerformed
+         int temp = pageIndexDetailType + 1;
+        if(temp <= totalPageDetailType) {
+            pageIndexDetailType++;
+            new Thread(() -> {
+                getDetailTypes(false);
+            }).start();
+        }else {
+            pageIndexDetailType = totalPageDetailType;
+        }
+    }//GEN-LAST:event_btnDetailTypeNextActionPerformed
 
     private void txtSearchTableUser9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser9MouseClicked
         // TODO add your handling code here:
@@ -1541,29 +2117,29 @@ public class Dashboard extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTableUserSearch9ActionPerformed
 
-    private void btnUserAdd9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd9ActionPerformed
+    private void btnBrandAdd2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandAdd2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd9ActionPerformed
+    }//GEN-LAST:event_btnBrandAdd2ActionPerformed
 
-    private void btnUserEdit9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit9ActionPerformed
+    private void btnBrandEdit2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandEdit2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit9ActionPerformed
+    }//GEN-LAST:event_btnBrandEdit2ActionPerformed
 
-    private void btnUserRemove10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove10ActionPerformed
+    private void btnBrandRemove2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRemove2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove10ActionPerformed
+    }//GEN-LAST:event_btnBrandRemove2ActionPerformed
 
-    private void btnUserRefresh10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh10ActionPerformed
+    private void btnBrandRefresh2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRefresh2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh10ActionPerformed
+    }//GEN-LAST:event_btnBrandRefresh2ActionPerformed
 
-    private void btnUserPrev10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev10ActionPerformed
+    private void btnBrandPrev2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandPrev2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev10ActionPerformed
+    }//GEN-LAST:event_btnBrandPrev2ActionPerformed
 
-    private void btnUserNext10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext10ActionPerformed
+    private void btnBrandNext2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandNext2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext10ActionPerformed
+    }//GEN-LAST:event_btnBrandNext2ActionPerformed
 
     private void txtSearchTableUser10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser10MouseClicked
         // TODO add your handling code here:
@@ -1576,70 +2152,6 @@ public class Dashboard extends javax.swing.JFrame {
     private void btnTableUserSearch10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch10ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTableUserSearch10ActionPerformed
-
-    private void btnUserAdd10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd10ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd10ActionPerformed
-
-    private void btnUserEdit10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit10ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit10ActionPerformed
-
-    private void btnUserRemove11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove11ActionPerformed
-
-    private void btnUserRefresh11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh11ActionPerformed
-
-    private void btnUserPrev11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev11ActionPerformed
-
-    private void btnUserNext11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext11ActionPerformed
-
-    private void txtSearchTableUser11MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser11MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser11MouseClicked
-
-    private void txtSearchTableUser11KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser11KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser11KeyPressed
-
-    private void btnTableUserSearch11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnTableUserSearch11ActionPerformed
-
-    private void btnUserRemove12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove12ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove12ActionPerformed
-
-    private void btnUserRefresh12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh12ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh12ActionPerformed
-
-    private void btnUserPrev12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev12ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev12ActionPerformed
-
-    private void btnUserNext12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext12ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext12ActionPerformed
-
-    private void txtSearchTableUser12MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser12MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser12MouseClicked
-
-    private void txtSearchTableUser12KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser12KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser12KeyPressed
-
-    private void btnTableUserSearch12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch12ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnTableUserSearch12ActionPerformed
     public void searchTableContents(String searchString) {
         new Thread(() -> {
             DefaultTableModel temp = (DefaultTableModel) tableUser.getModel();
@@ -1713,71 +2225,72 @@ public class Dashboard extends javax.swing.JFrame {
         new Thread(() -> {
             getUsers(false);
         }).start();
-
-//            // call api get all cars
-//            new Thread(() -> {
-//
-//            }).start();
-//
-//            // call api get all brands
-//            new Thread(() -> {
-//
-//            }).start();
-//
-//            // call api get all details
-//            new Thread(() -> {
-//
-//            }).start();
+        new Thread(() -> {
+             getBrands(false);
+        }).start();
+        
+         new Thread(() -> {
+             getDetailTypes(false);
+        }).start();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBrandAdd;
+    private javax.swing.JButton btnBrandAdd2;
+    private javax.swing.JButton btnBrandEdit;
+    private javax.swing.JButton btnBrandEdit2;
+    private javax.swing.JButton btnBrandNext;
+    private javax.swing.JButton btnBrandNext2;
+    private javax.swing.JButton btnBrandPrev;
+    private javax.swing.JButton btnBrandPrev2;
+    private javax.swing.JButton btnBrandRefresh;
+    private javax.swing.JButton btnBrandRefresh2;
+    private javax.swing.JButton btnBrandRemove;
+    private javax.swing.JButton btnBrandRemove2;
+    private javax.swing.JButton btnDetailTypeAdd;
+    private javax.swing.JButton btnDetailTypeEdit;
+    private javax.swing.JButton btnDetailTypeNext;
+    private javax.swing.JButton btnDetailTypePrev;
+    private javax.swing.JButton btnDetailTypeRefresh;
+    private javax.swing.JButton btnDetailTypeRemove;
     private javax.swing.JButton btnTableUserSearch;
+    private javax.swing.JButton btnTableUserSearch1;
     private javax.swing.JButton btnTableUserSearch10;
-    private javax.swing.JButton btnTableUserSearch11;
-    private javax.swing.JButton btnTableUserSearch12;
-    private javax.swing.JButton btnTableUserSearch4;
-    private javax.swing.JButton btnTableUserSearch5;
+    private javax.swing.JButton btnTableUserSearch2;
+    private javax.swing.JButton btnTableUserSearch3;
+    private javax.swing.JButton btnTableUserSearch6;
+    private javax.swing.JButton btnTableUserSearch8;
     private javax.swing.JButton btnTableUserSearch9;
     private javax.swing.JButton btnUserAdd;
-    private javax.swing.JButton btnUserAdd10;
-    private javax.swing.JButton btnUserAdd4;
-    private javax.swing.JButton btnUserAdd5;
-    private javax.swing.JButton btnUserAdd8;
-    private javax.swing.JButton btnUserAdd9;
+    private javax.swing.JButton btnUserAdd1;
+    private javax.swing.JButton btnUserAdd11;
+    private javax.swing.JButton btnUserAdd2;
+    private javax.swing.JButton btnUserAdd3;
     private javax.swing.JButton btnUserEdit;
-    private javax.swing.JButton btnUserEdit10;
-    private javax.swing.JButton btnUserEdit4;
-    private javax.swing.JButton btnUserEdit5;
-    private javax.swing.JButton btnUserEdit8;
-    private javax.swing.JButton btnUserEdit9;
+    private javax.swing.JButton btnUserEdit1;
+    private javax.swing.JButton btnUserEdit11;
+    private javax.swing.JButton btnUserEdit2;
+    private javax.swing.JButton btnUserEdit3;
     private javax.swing.JButton btnUserNext;
-    private javax.swing.JButton btnUserNext10;
-    private javax.swing.JButton btnUserNext11;
-    private javax.swing.JButton btnUserNext12;
-    private javax.swing.JButton btnUserNext4;
-    private javax.swing.JButton btnUserNext5;
-    private javax.swing.JButton btnUserNext9;
+    private javax.swing.JButton btnUserNext1;
+    private javax.swing.JButton btnUserNext2;
+    private javax.swing.JButton btnUserNext3;
+    private javax.swing.JButton btnUserNext8;
     private javax.swing.JButton btnUserPrev;
-    private javax.swing.JButton btnUserPrev10;
-    private javax.swing.JButton btnUserPrev11;
-    private javax.swing.JButton btnUserPrev12;
-    private javax.swing.JButton btnUserPrev4;
-    private javax.swing.JButton btnUserPrev5;
-    private javax.swing.JButton btnUserPrev9;
+    private javax.swing.JButton btnUserPrev1;
+    private javax.swing.JButton btnUserPrev2;
+    private javax.swing.JButton btnUserPrev3;
+    private javax.swing.JButton btnUserPrev8;
     private javax.swing.JButton btnUserRefresh;
-    private javax.swing.JButton btnUserRefresh10;
-    private javax.swing.JButton btnUserRefresh11;
-    private javax.swing.JButton btnUserRefresh12;
-    private javax.swing.JButton btnUserRefresh4;
-    private javax.swing.JButton btnUserRefresh5;
-    private javax.swing.JButton btnUserRefresh9;
+    private javax.swing.JButton btnUserRefresh1;
+    private javax.swing.JButton btnUserRefresh2;
+    private javax.swing.JButton btnUserRefresh3;
+    private javax.swing.JButton btnUserRefresh8;
     private javax.swing.JButton btnUserRemove;
-    private javax.swing.JButton btnUserRemove10;
-    private javax.swing.JButton btnUserRemove11;
-    private javax.swing.JButton btnUserRemove12;
-    private javax.swing.JButton btnUserRemove4;
-    private javax.swing.JButton btnUserRemove5;
-    private javax.swing.JButton btnUserRemove9;
+    private javax.swing.JButton btnUserRemove1;
+    private javax.swing.JButton btnUserRemove2;
+    private javax.swing.JButton btnUserRemove3;
+    private javax.swing.JButton btnUserRemove8;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
@@ -1785,15 +2298,18 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
+    private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
+    private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel17;
     private javax.swing.JPanel jPanel18;
     private javax.swing.JPanel jPanel19;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel20;
     private javax.swing.JPanel jPanel21;
-    private javax.swing.JPanel jPanel22;
-    private javax.swing.JPanel jPanel23;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -1802,42 +2318,48 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane10;
     private javax.swing.JScrollPane jScrollPane11;
     private javax.swing.JScrollPane jScrollPane12;
-    private javax.swing.JScrollPane jScrollPane13;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane6;
-    private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTabbedPane jTabbedPane2;
+    private javax.swing.JLabel lbBrandPageIndex;
+    private javax.swing.JLabel lbBrandPageIndex2;
+    private javax.swing.JLabel lbDetailTypePageIndex;
     private javax.swing.JLabel lbPageIndex;
-    private javax.swing.JLabel lbPageIndex10;
-    private javax.swing.JLabel lbPageIndex11;
-    private javax.swing.JLabel lbPageIndex12;
-    private javax.swing.JLabel lbPageIndex4;
-    private javax.swing.JLabel lbPageIndex5;
-    private javax.swing.JLabel lbPageIndex9;
+    private javax.swing.JLabel lbPageIndex1;
+    private javax.swing.JLabel lbPageIndex2;
+    private javax.swing.JLabel lbPageIndex3;
+    private javax.swing.JLabel lbPageIndex8;
     private javax.swing.JTabbedPane tabApprove;
     private javax.swing.JTabbedPane tabDetail;
+    private javax.swing.JTable tableBrand;
+    private javax.swing.JTable tableBrand2;
+    private javax.swing.JTable tableDetailType;
     private javax.swing.JTable tableUser;
-    private javax.swing.JTable tableUser10;
-    private javax.swing.JTable tableUser11;
-    private javax.swing.JTable tableUser12;
-    private javax.swing.JTable tableUser4;
-    private javax.swing.JTable tableUser5;
-    private javax.swing.JTable tableUser9;
+    private javax.swing.JTable tableUser1;
+    private javax.swing.JTable tableUser2;
+    private javax.swing.JTable tableUser3;
+    private javax.swing.JTable tableUser8;
     private javax.swing.JToolBar toolBarUser;
+    private javax.swing.JToolBar toolBarUser1;
     private javax.swing.JToolBar toolBarUser10;
-    private javax.swing.JToolBar toolBarUser11;
-    private javax.swing.JToolBar toolBarUser12;
-    private javax.swing.JToolBar toolBarUser4;
-    private javax.swing.JToolBar toolBarUser5;
+    private javax.swing.JToolBar toolBarUser2;
+    private javax.swing.JToolBar toolBarUser3;
+    private javax.swing.JToolBar toolBarUser6;
+    private javax.swing.JToolBar toolBarUser8;
     private javax.swing.JToolBar toolBarUser9;
     private javax.swing.JTextField txtSearchTableUser;
+    private javax.swing.JTextField txtSearchTableUser1;
     private javax.swing.JTextField txtSearchTableUser10;
-    private javax.swing.JTextField txtSearchTableUser11;
-    private javax.swing.JTextField txtSearchTableUser12;
-    private javax.swing.JTextField txtSearchTableUser4;
-    private javax.swing.JTextField txtSearchTableUser5;
+    private javax.swing.JTextField txtSearchTableUser2;
+    private javax.swing.JTextField txtSearchTableUser3;
+    private javax.swing.JTextField txtSearchTableUser6;
+    private javax.swing.JTextField txtSearchTableUser8;
     private javax.swing.JTextField txtSearchTableUser9;
     // End of variables declaration//GEN-END:variables
 

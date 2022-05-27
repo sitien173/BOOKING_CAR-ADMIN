@@ -15,8 +15,8 @@ import java.net.ProtocolException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
-import ptit.webservice.admin.Program;
-import ptit.webservice.model.AppUser;
+import ptit.webservice.main.Program;
+import ptit.webservice.model.AppUser.AppUser;
 import ptit.webservice.model.ResponseModel;
 
 /**
