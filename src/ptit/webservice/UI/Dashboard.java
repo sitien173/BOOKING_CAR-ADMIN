@@ -25,8 +25,10 @@ import javax.swing.table.DefaultTableModel;
 import ptit.webservice.UI.AppUser.add;
 import ptit.webservice.UI.AppUser.edit;
 import ptit.webservice.main.Program;
+import ptit.webservice.model.AppLog.AppLog;
 import ptit.webservice.model.AppUser.AppUser;
 import ptit.webservice.model.Brand.Brand;
+import ptit.webservice.model.Detail.Detail;
 import ptit.webservice.model.DetailType.DetailType;
 import ptit.webservice.model.PagingModel;
 import ptit.webservice.model.ResponseModel;
@@ -42,48 +44,48 @@ public class Dashboard extends javax.swing.JFrame {
     private static int totalPageUser = 0;
     // cache appUser
     private static final Map<Integer, List<AppUser>> cacheAppUser = new HashMap<>();
-    
-   
+
     private static int pageIndexBrand = 1;
     private static final int limitBrand = 20;
     private static int totalPageBrand = 0;
-    // cache Brand
     private static final Map<Integer, List<Brand>> cacheBrand = new HashMap<>();
-    
-     private static int pageIndexDetailType = 1;
+
+    private static int pageIndexDetailType = 1;
     private static final int limitDetailType = 20;
     private static int totalPageDetailType = 0;
-    // cache Brand
     private static final Map<Integer, List<DetailType>> cacheDetailType = new HashMap<>();
-    
-    
+
+    private static int pageIndexDetail = 1;
+    private static final int limitDetail = 20;
+    private static int totalPageDetail = 0;
+    private static final Map<Integer, List<Detail>> cacheDetail = new HashMap<>();
 
     private void getUsers(boolean isRefresh) {
         try {
             List<AppUser> appUsers = cacheAppUser.get(pageIndexUser);
-            if(appUsers == null || isRefresh) {
-              String url = "/AppUsers/list";
-               Map<String, String> params = new HashMap<>();
-               params.put("pageIndex", String.valueOf(pageIndexUser));
-               params.put("limit", String.valueOf(limitUser));
+            if (appUsers == null || isRefresh) {
+                String url = "/AppUsers/list";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexUser));
+                params.put("limit", String.valueOf(limitUser));
 
-               Map<Program.HttpHeader, String> headers = new HashMap<>();
-               headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
-               headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
 
-               String jsonData = Program.SendHttpGet(url, params, headers);
+                String jsonData = Program.SendHttpGet(url, params, headers);
 
-               java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<AppUser>>>() {
-               }.getType();
-               ResponseModel<PagingModel<AppUser>> response = new Gson().fromJson(jsonData, type);
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<AppUser>>>() {
+                }.getType();
+                ResponseModel<PagingModel<AppUser>> response = new Gson().fromJson(jsonData, type);
                 if (!response.isSuccess()) {
-                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
                 }
                 appUsers = response.getData().getItems();
                 totalPageUser = response.getData().getTotalPage();
                 cacheAppUser.put(pageIndexUser, appUsers);
             }
-            
+
             DefaultTableModel model = (DefaultTableModel) tableUser.getModel();
 //                 DefaultTableModel model = new DefaultTableModel(){
 //                    @Override
@@ -94,30 +96,30 @@ public class Dashboard extends javax.swing.JFrame {
 //                        }
 //                    }
 //                };
-                model.setColumnCount(0);
-                model.setRowCount(0);
-                
-                model.addColumn("Id");
-                model.addColumn("Username");
-                model.addColumn("Email");
-                model.addColumn("PhoneNumber");
-                model.addColumn("Name");
-                model.addColumn("Role");
-               // model.addColumn("Avatar");
-                int size = appUsers.size();
-                for (int i = 0; i < size; i++) {
-                    Vector vt = new Vector<>();
-                    vt.add(String.valueOf(appUsers.get(i).getId()));
-                    vt.add(appUsers.get(i).getUsername());
-                    vt.add(appUsers.get(i).getEmail());
-                    vt.add(appUsers.get(i).getPhoneNumber());
-                    vt.add(appUsers.get(i).getName());
-                    vt.add(appUsers.get(i).getRole());
-                    //vt.add(appUsers.get(i).getAvatar());
-                    model.addRow(vt);
-                }
-                lbPageIndex.setText(String.valueOf(pageIndexUser));
-            
+            model.setColumnCount(0);
+            model.setRowCount(0);
+
+            model.addColumn("Id");
+            model.addColumn("Username");
+            model.addColumn("Email");
+            model.addColumn("PhoneNumber");
+            model.addColumn("Name");
+            model.addColumn("Role");
+            // model.addColumn("Avatar");
+            int size = appUsers.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                vt.add(String.valueOf(appUsers.get(i).getId()));
+                vt.add(appUsers.get(i).getUsername());
+                vt.add(appUsers.get(i).getEmail());
+                vt.add(appUsers.get(i).getPhoneNumber());
+                vt.add(appUsers.get(i).getName());
+                vt.add(appUsers.get(i).getRole());
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndex.setText(String.valueOf(pageIndexUser));
+
         } catch (ProtocolException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -128,29 +130,29 @@ public class Dashboard extends javax.swing.JFrame {
     private void getBrands(boolean isRefresh) {
         try {
             List<Brand> brands = cacheBrand.get(pageIndexBrand);
-            if(brands == null || isRefresh) {
-              String url = "/Brands/list";
-               Map<String, String> params = new HashMap<>();
-               params.put("pageIndex", String.valueOf(pageIndexBrand));
-               params.put("limit", String.valueOf(limitBrand));
+            if (brands == null || isRefresh) {
+                String url = "/Brands/list";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexBrand));
+                params.put("limit", String.valueOf(limitBrand));
 
-               Map<Program.HttpHeader, String> headers = new HashMap<>();
-               headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
-               headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
 
-               String jsonData = Program.SendHttpGet(url, params, headers);
+                String jsonData = Program.SendHttpGet(url, params, headers);
 
-               java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Brand>>>() {
-               }.getType();
-               ResponseModel<PagingModel<Brand>> response = new Gson().fromJson(jsonData, type);
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Brand>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Brand>> response = new Gson().fromJson(jsonData, type);
                 if (!response.isSuccess()) {
-                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
                 }
                 brands = response.getData().getItems();
                 totalPageBrand = response.getData().getTotalPage();
                 cacheBrand.put(pageIndexBrand, brands);
             }
-            
+
             DefaultTableModel model = (DefaultTableModel) tableBrand.getModel();
 //                 DefaultTableModel model = new DefaultTableModel(){
 //                    @Override
@@ -161,57 +163,57 @@ public class Dashboard extends javax.swing.JFrame {
 //                        }
 //                    }
 //                };
-                model.setColumnCount(0);
-                model.setRowCount(0);
-                
-                model.addColumn("Id");
-                model.addColumn("Name");
-                model.addColumn("Code");
-              
-               // model.addColumn("Avatar");
-                int size = brands.size();
-                for (int i = 0; i < size; i++) {
-                    Vector vt = new Vector<>();
-                    vt.add(String.valueOf(brands.get(i).getId()));
-                    vt.add(brands.get(i).getName());
-                    vt.add(brands.get(i).getCode());
-                    model.addRow(vt);
-                }
-                lbBrandPageIndex.setText(String.valueOf(pageIndexBrand));
-            
+            model.setColumnCount(0);
+            model.setRowCount(0);
+
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Code");
+
+            // model.addColumn("Avatar");
+            int size = brands.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                vt.add(String.valueOf(brands.get(i).getId()));
+                vt.add(brands.get(i).getName());
+                vt.add(brands.get(i).getCode());
+                model.addRow(vt);
+            }
+            lbBrandPageIndex.setText(String.valueOf(pageIndexBrand));
+
         } catch (ProtocolException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     private void getDetailTypes(boolean isRefresh) {
         try {
             List<DetailType> detailTypes = cacheDetailType.get(pageIndexDetailType);
-            if(detailTypes == null || isRefresh) {
-              String url = "/DetailTypes/list";
-               Map<String, String> params = new HashMap<>();
-               params.put("pageIndex", String.valueOf(pageIndexDetailType));
-               params.put("limit", String.valueOf(limitDetailType));
+            if (detailTypes == null || isRefresh) {
+                String url = "/DetailTypes/list";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexDetailType));
+                params.put("limit", String.valueOf(limitDetailType));
 
-               Map<Program.HttpHeader, String> headers = new HashMap<>();
-               headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
-               headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
 
-               String jsonData = Program.SendHttpGet(url, params, headers);
+                String jsonData = Program.SendHttpGet(url, params, headers);
 
-               java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<DetailType>>>() {
-               }.getType();
-               ResponseModel<PagingModel<DetailType>> response = new Gson().fromJson(jsonData, type);
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<DetailType>>>() {
+                }.getType();
+                ResponseModel<PagingModel<DetailType>> response = new Gson().fromJson(jsonData, type);
                 if (!response.isSuccess()) {
-                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
                 }
                 detailTypes = response.getData().getItems();
                 totalPageDetailType = response.getData().getTotalPage();
                 cacheDetailType.put(pageIndexDetailType, detailTypes);
             }
-            
+
             DefaultTableModel model = (DefaultTableModel) tableDetailType.getModel();
 //                 DefaultTableModel model = new DefaultTableModel(){
 //                    @Override
@@ -222,38 +224,172 @@ public class Dashboard extends javax.swing.JFrame {
 //                        }
 //                    }
 //                };
-                model.setColumnCount(0);
-                model.setRowCount(0);
-                
-                model.addColumn("Id");
-                model.addColumn("Name");
-                model.addColumn("Code");
-                model.addColumn("Icon");
-                model.addColumn("Description");
-                model.addColumn("Parent Id");
-              
-               // model.addColumn("Avatar");
-                int size = detailTypes.size();
-                for (int i = 0; i < size; i++) {
-                    Vector vt = new Vector<>();
-                    vt.add(String.valueOf(detailTypes.get(i).getId()));
-                    vt.add(detailTypes.get(i).getName());
-                    vt.add(detailTypes.get(i).getCode());
-                    vt.add(detailTypes.get(i).getIcon());
-                    vt.add(detailTypes.get(i).getDescription());
-                    if(detailTypes.get(i).getParent() != null) {
-                        vt.add(String.valueOf(detailTypes.get(i).getParent().getId()));
-                    }
-                    model.addRow(vt);
+            model.setColumnCount(0);
+            model.setRowCount(0);
+
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Code");
+            model.addColumn("Icon");
+            model.addColumn("Description");
+            model.addColumn("Parent Id");
+
+            // model.addColumn("Avatar");
+            int size = detailTypes.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                vt.add(String.valueOf(detailTypes.get(i).getId()));
+                vt.add(detailTypes.get(i).getName());
+                vt.add(detailTypes.get(i).getCode());
+                vt.add(detailTypes.get(i).getIcon());
+                vt.add(detailTypes.get(i).getDescription());
+                if (detailTypes.get(i).getParent() != null) {
+                    vt.add(String.valueOf(detailTypes.get(i).getParent().getId()));
                 }
-                lbDetailTypePageIndex.setText(String.valueOf(pageIndexDetailType));
-            
+                model.addRow(vt);
+            }
+            lbDetailTypePageIndex.setText(String.valueOf(pageIndexDetailType));
+
         } catch (ProtocolException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    private void getDetail(boolean isRefresh) {
+        try {
+            List<Detail> details = cacheDetail.get(pageIndexDetail);
+            if (details == null || isRefresh) {
+                String url = "/Detail/list";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexDetail));
+                params.put("limit", String.valueOf(limitDetail));
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Detail>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Detail>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                details = response.getData().getItems();
+                totalPageDetail = response.getData().getTotalPage();
+                cacheDetail.put(pageIndexDetail, details);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableDetail.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+
+            model.addColumn("Id");
+            model.addColumn("Val");
+            model.addColumn("DetailType_Id");
+            model.addColumn("DetailType_Name");
+            model.addColumn("DetailType_Code");;
+
+            // model.addColumn("Avatar");
+            int size = details.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                vt.add(String.valueOf(details.get(i).getId()));
+                vt.add(String.valueOf(details.get(i).getVal()));
+                vt.add(String.valueOf(details.get(i).getDetailType().getId()));
+                vt.add(String.valueOf(details.get(i).getDetailType().getName()));
+                vt.add(String.valueOf(details.get(i).getDetailType().getCode()));
+                model.addRow(vt);
+            }
+            lbDetailPageIndex.setText(String.valueOf(pageIndexDetail));
+
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getLogs() {
+        try {
+            String url = "/AppLogs/list";
+
+            Map<Program.HttpHeader, String> headers = new HashMap<>();
+            headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+            headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+            String jsonData = Program.SendHttpGet(url, null, headers);
+
+            java.lang.reflect.Type type = new TypeToken<ResponseModel<List<AppLog>>>() {
+            }.getType();
+            ResponseModel<List<AppLog>> response = new Gson().fromJson(jsonData, type);
+            if (!response.isSuccess()) {
+                JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+            }
+            List<AppLog> logs = response.getData();;
+
+            DefaultTableModel model = (DefaultTableModel) tableLog.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+
+            model.addColumn("Id");
+            model.addColumn("Exception");
+            model.addColumn("Message");
+            model.addColumn("Method");
+            model.addColumn("Params");
+            model.addColumn("RequestUrl");;
+            model.addColumn("Status");;
+            model.addColumn("CreatedAt");;
+            model.addColumn("CreatedBy");;
+            model.addColumn("Query");;
+            model.addColumn("Header");;
+            model.addColumn("Host");;
+
+            // model.addColumn("Avatar");
+            logs.forEach(item -> {
+                Vector vt = new Vector();
+                vt.add(String.valueOf(item.getId()));
+                vt.add(item.getException());
+                vt.add(item.getMessage());
+                vt.add(item.getMethod());
+                vt.add(item.getParams());
+                vt.add(item.getRequest_url());
+                vt.add(String.valueOf(item.getStatus()));
+                vt.add(item.getCreated_at());
+                vt.add(item.getCreated_by());
+                vt.add(item.getQuery());
+                vt.add(item.getHeader());
+                vt.add(item.getHost());
+                model.addRow(vt);
+            });
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     /**
      * Creates new form Dashboard
      */
@@ -365,34 +501,27 @@ public class Dashboard extends javax.swing.JFrame {
         tableDetailType = new javax.swing.JTable();
         jPanel19 = new javax.swing.JPanel();
         toolBarUser10 = new javax.swing.JToolBar();
-        btnBrandAdd2 = new javax.swing.JButton();
-        btnBrandEdit2 = new javax.swing.JButton();
-        btnBrandRemove2 = new javax.swing.JButton();
-        btnBrandRefresh2 = new javax.swing.JButton();
-        btnBrandPrev2 = new javax.swing.JButton();
-        lbBrandPageIndex2 = new javax.swing.JLabel();
-        btnBrandNext2 = new javax.swing.JButton();
+        btnDetailAdd = new javax.swing.JButton();
+        btnDetailEdit = new javax.swing.JButton();
+        btnDetailRemove = new javax.swing.JButton();
+        btnDetailRefresh = new javax.swing.JButton();
+        btnDetailPrev = new javax.swing.JButton();
+        lbDetailPageIndex = new javax.swing.JLabel();
+        btnDetailNext = new javax.swing.JButton();
         txtSearchTableUser10 = new javax.swing.JTextField();
         btnTableUserSearch10 = new javax.swing.JButton();
         jPanel21 = new javax.swing.JPanel();
         jScrollPane12 = new javax.swing.JScrollPane();
-        tableBrand2 = new javax.swing.JTable();
+        tableDetail = new javax.swing.JTable();
         jPanel9 = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel13 = new javax.swing.JPanel();
         toolBarUser8 = new javax.swing.JToolBar();
-        btnUserAdd11 = new javax.swing.JButton();
-        btnUserEdit11 = new javax.swing.JButton();
-        btnUserRemove8 = new javax.swing.JButton();
-        btnUserRefresh8 = new javax.swing.JButton();
-        btnUserPrev8 = new javax.swing.JButton();
-        lbPageIndex8 = new javax.swing.JLabel();
-        btnUserNext8 = new javax.swing.JButton();
-        txtSearchTableUser8 = new javax.swing.JTextField();
-        btnTableUserSearch8 = new javax.swing.JButton();
+        btnLogRemove = new javax.swing.JButton();
+        btnLogRefresh = new javax.swing.JButton();
         jPanel17 = new javax.swing.JPanel();
         jScrollPane10 = new javax.swing.JScrollPane();
-        tableUser8 = new javax.swing.JTable();
+        tableLog = new javax.swing.JTable();
         jPanel14 = new javax.swing.JPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -636,7 +765,7 @@ public class Dashboard extends javax.swing.JFrame {
         txtSearchTableUser1.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtSearchTableUser1.setText("nhập tên đăng nhập, email, số điện thoại ...");
         txtSearchTableUser1.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser1.setColumns(40);
         txtSearchTableUser1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtSearchTableUser1MouseClicked(evt);
@@ -1099,7 +1228,7 @@ public class Dashboard extends javax.swing.JFrame {
         txtSearchTableUser6.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtSearchTableUser6.setText("nhập tên, code.");
         txtSearchTableUser6.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser6.setColumns(40);
         txtSearchTableUser6.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtSearchTableUser6MouseClicked(evt);
@@ -1249,7 +1378,7 @@ public class Dashboard extends javax.swing.JFrame {
         txtSearchTableUser9.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtSearchTableUser9.setText("nhập tên, code.");
         txtSearchTableUser9.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser9.setColumns(40);
         txtSearchTableUser9.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtSearchTableUser9MouseClicked(evt);
@@ -1322,84 +1451,84 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser10.setBorder(null);
         toolBarUser10.setRollover(true);
 
-        btnBrandAdd2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
-        btnBrandAdd2.setText("Thêm");
-        buttonGroup1.add(btnBrandAdd2);
-        btnBrandAdd2.setFocusable(false);
-        btnBrandAdd2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnBrandAdd2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
+        btnDetailAdd.setText("Thêm");
+        buttonGroup1.add(btnDetailAdd);
+        btnDetailAdd.setFocusable(false);
+        btnDetailAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandAdd2ActionPerformed(evt);
+                btnDetailAddActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandAdd2);
+        toolBarUser10.add(btnDetailAdd);
 
-        btnBrandEdit2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
-        btnBrandEdit2.setText("Sửa");
-        btnBrandEdit2.setFocusable(false);
-        btnBrandEdit2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnBrandEdit2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailEdit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
+        btnDetailEdit.setText("Sửa");
+        btnDetailEdit.setFocusable(false);
+        btnDetailEdit.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandEdit2ActionPerformed(evt);
+                btnDetailEditActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandEdit2);
+        toolBarUser10.add(btnDetailEdit);
 
-        btnBrandRemove2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
-        btnBrandRemove2.setText("Xoá");
-        btnBrandRemove2.setFocusable(false);
-        btnBrandRemove2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnBrandRemove2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnDetailRemove.setText("Xoá");
+        btnDetailRemove.setFocusable(false);
+        btnDetailRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailRemove.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandRemove2ActionPerformed(evt);
+                btnDetailRemoveActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandRemove2);
+        toolBarUser10.add(btnDetailRemove);
 
-        btnBrandRefresh2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
-        btnBrandRefresh2.setText("Làm mới");
-        btnBrandRefresh2.setFocusable(false);
-        btnBrandRefresh2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnBrandRefresh2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnDetailRefresh.setText("Làm mới");
+        btnDetailRefresh.setFocusable(false);
+        btnDetailRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnDetailRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandRefresh2ActionPerformed(evt);
+                btnDetailRefreshActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandRefresh2);
+        toolBarUser10.add(btnDetailRefresh);
 
-        btnBrandPrev2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
-        btnBrandPrev2.setFocusable(false);
-        btnBrandPrev2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnBrandPrev2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnBrandPrev2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnDetailPrev.setFocusable(false);
+        btnDetailPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDetailPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnDetailPrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandPrev2ActionPerformed(evt);
+                btnDetailPrevActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandPrev2);
+        toolBarUser10.add(btnDetailPrev);
 
-        lbBrandPageIndex2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbBrandPageIndex2.setText("page");
-        lbBrandPageIndex2.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbBrandPageIndex2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser10.add(lbBrandPageIndex2);
+        lbDetailPageIndex.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbDetailPageIndex.setText("page");
+        lbDetailPageIndex.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbDetailPageIndex.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser10.add(lbDetailPageIndex);
 
-        btnBrandNext2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
-        btnBrandNext2.setFocusable(false);
-        btnBrandNext2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnBrandNext2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnBrandNext2.addActionListener(new java.awt.event.ActionListener() {
+        btnDetailNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnDetailNext.setFocusable(false);
+        btnDetailNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDetailNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnDetailNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrandNext2ActionPerformed(evt);
+                btnDetailNextActionPerformed(evt);
             }
         });
-        toolBarUser10.add(btnBrandNext2);
+        toolBarUser10.add(btnDetailNext);
 
         txtSearchTableUser10.setForeground(new java.awt.Color(204, 204, 204));
         txtSearchTableUser10.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtSearchTableUser10.setText("nhập tên, code.");
         txtSearchTableUser10.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
+        txtSearchTableUser10.setColumns(40);
         txtSearchTableUser10.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtSearchTableUser10MouseClicked(evt);
@@ -1423,8 +1552,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser10.add(btnTableUserSearch10);
 
-        tableBrand2.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableBrand2.setModel(new javax.swing.table.DefaultTableModel(
+        tableDetail.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableDetail.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -1434,12 +1563,12 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableBrand2.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableBrand2.setGridColor(java.awt.SystemColor.control);
-        tableBrand2.setRowHeight(30);
-        tableBrand2.setRowMargin(2);
-        tableBrand2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane12.setViewportView(tableBrand2);
+        tableDetail.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableDetail.setGridColor(java.awt.SystemColor.control);
+        tableDetail.setRowHeight(30);
+        tableDetail.setRowMargin(2);
+        tableDetail.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane12.setViewportView(tableDetail);
 
         javax.swing.GroupLayout jPanel21Layout = new javax.swing.GroupLayout(jPanel21);
         jPanel21.setLayout(jPanel21Layout);
@@ -1485,109 +1614,30 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser8.setBorder(null);
         toolBarUser8.setRollover(true);
 
-        btnUserAdd11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
-        btnUserAdd11.setText("Thêm");
-        buttonGroup1.add(btnUserAdd11);
-        btnUserAdd11.setFocusable(false);
-        btnUserAdd11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd11.addActionListener(new java.awt.event.ActionListener() {
+        btnLogRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnLogRemove.setText("Xoá");
+        btnLogRemove.setFocusable(false);
+        btnLogRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnLogRemove.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd11ActionPerformed(evt);
+                btnLogRemoveActionPerformed(evt);
             }
         });
-        toolBarUser8.add(btnUserAdd11);
+        toolBarUser8.add(btnLogRemove);
 
-        btnUserEdit11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
-        btnUserEdit11.setText("Sửa");
-        btnUserEdit11.setFocusable(false);
-        btnUserEdit11.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit11.addActionListener(new java.awt.event.ActionListener() {
+        btnLogRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnLogRefresh.setText("Làm mới");
+        btnLogRefresh.setFocusable(false);
+        btnLogRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnLogRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit11ActionPerformed(evt);
+                btnLogRefreshActionPerformed(evt);
             }
         });
-        toolBarUser8.add(btnUserEdit11);
+        toolBarUser8.add(btnLogRefresh);
 
-        btnUserRemove8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
-        btnUserRemove8.setText("Xoá");
-        btnUserRemove8.setFocusable(false);
-        btnUserRemove8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove8ActionPerformed(evt);
-            }
-        });
-        toolBarUser8.add(btnUserRemove8);
-
-        btnUserRefresh8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
-        btnUserRefresh8.setText("Làm mới");
-        btnUserRefresh8.setFocusable(false);
-        btnUserRefresh8.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh8ActionPerformed(evt);
-            }
-        });
-        toolBarUser8.add(btnUserRefresh8);
-
-        btnUserPrev8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
-        btnUserPrev8.setFocusable(false);
-        btnUserPrev8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev8ActionPerformed(evt);
-            }
-        });
-        toolBarUser8.add(btnUserPrev8);
-
-        lbPageIndex8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex8.setText("page");
-        lbPageIndex8.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser8.add(lbPageIndex8);
-
-        btnUserNext8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
-        btnUserNext8.setFocusable(false);
-        btnUserNext8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext8ActionPerformed(evt);
-            }
-        });
-        toolBarUser8.add(btnUserNext8);
-
-        txtSearchTableUser8.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser8.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser8.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser8.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
-        txtSearchTableUser8.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser8MouseClicked(evt);
-            }
-        });
-        txtSearchTableUser8.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser8KeyPressed(evt);
-            }
-        });
-        toolBarUser8.add(txtSearchTableUser8);
-
-        btnTableUserSearch8.setText("Tìm kiếm");
-        btnTableUserSearch8.setFocusable(false);
-        btnTableUserSearch8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTableUserSearch8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTableUserSearch8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableUserSearch8ActionPerformed(evt);
-            }
-        });
-        toolBarUser8.add(btnTableUserSearch8);
-
-        tableUser8.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser8.setModel(new javax.swing.table.DefaultTableModel(
+        tableLog.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableLog.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -1597,12 +1647,12 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser8.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser8.setGridColor(java.awt.SystemColor.control);
-        tableUser8.setRowHeight(30);
-        tableUser8.setRowMargin(2);
-        tableUser8.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane10.setViewportView(tableUser8);
+        tableLog.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableLog.setGridColor(java.awt.SystemColor.control);
+        tableLog.setRowHeight(30);
+        tableLog.setRowMargin(2);
+        tableLog.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane10.setViewportView(tableLog);
 
         javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
         jPanel17.setLayout(jPanel17Layout);
@@ -1662,12 +1712,27 @@ public class Dashboard extends javax.swing.JFrame {
         jMenu1.setText("Cài đặt");
 
         jMenuItem1.setText("Thông tin cá nhân");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
         jMenu1.add(jMenuItem1);
 
         jMenuItem2.setText("Đổi mật khẩu");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
         jMenu1.add(jMenuItem2);
 
         jMenuItem4.setText("Đăng xuất");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
         jMenu1.add(jMenuItem4);
 
         jMenuBar1.add(jMenu1);
@@ -1812,7 +1877,7 @@ public class Dashboard extends javax.swing.JFrame {
             brand.setCode(code);
             new ptit.webservice.UI.Brand.edit().run(brand);
         } catch (Exception e) {
-            
+
         }
     }//GEN-LAST:event_btnBrandEditActionPerformed
 
@@ -1847,12 +1912,50 @@ public class Dashboard extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
         }
     }
-    
+
     private void deleteDetailType(int id) throws ProtocolException, IOException {
         // call API
         String url = "/DetailTypes";
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("id", String.valueOf(id));
+        Map<Program.HttpHeader, String> headers = new HashMap<>();
+        headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+
+        String jsonData = Program.SendHttp(url, Program.HttpMethod.DELETE, null, queryParams, headers);
+        Map<String, Object> response = new Gson().fromJson(jsonData, Map.class);
+        boolean isSuccess = (boolean) response.get("success");
+        if (!isSuccess) {
+            String message = (String) response.get("message");
+            JOptionPane.showMessageDialog(this, message, "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } else {
+            JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
+        }
+    }
+
+    private void deleteDetail(int id) throws ProtocolException, IOException {
+        // call API
+        String url = "/Detail";
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("id", String.valueOf(id));
+        Map<Program.HttpHeader, String> headers = new HashMap<>();
+        headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+
+        String jsonData = Program.SendHttp(url, Program.HttpMethod.DELETE, null, queryParams, headers);
+        Map<String, Object> response = new Gson().fromJson(jsonData, Map.class);
+        boolean isSuccess = (boolean) response.get("success");
+        if (!isSuccess) {
+            String message = (String) response.get("message");
+            JOptionPane.showMessageDialog(this, message, "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } else {
+            JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
+        }
+    }
+
+    private void deleteLog(String ids) throws ProtocolException, IOException {
+        // call API
+        String url = "/AppLogs";
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("ids", ids);
         Map<Program.HttpHeader, String> headers = new HashMap<>();
         headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
 
@@ -1876,24 +1979,24 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void btnBrandPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandPrevActionPerformed
         int temp = pageIndexBrand - 1;
-        if((temp + 1) > 1) {
+        if ((temp + 1) > 1) {
             pageIndexBrand--;
             new Thread(() -> {
                 getBrands(false);
             }).start();
-        }else {
+        } else {
             pageIndexBrand = 1;
         }
     }//GEN-LAST:event_btnBrandPrevActionPerformed
 
     private void btnBrandNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandNextActionPerformed
         int temp = pageIndexBrand + 1;
-        if(temp <= pageIndexBrand) {
+        if (temp <= pageIndexBrand) {
             pageIndexBrand++;
-             new Thread(() -> {
+            new Thread(() -> {
                 getBrands(false);
             }).start();
-        }else {
+        } else {
             pageIndexBrand = totalPageBrand;
         }
     }//GEN-LAST:event_btnBrandNextActionPerformed
@@ -1910,41 +2013,23 @@ public class Dashboard extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTableUserSearch6ActionPerformed
 
-    private void btnUserAdd11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd11ActionPerformed
+    private void btnLogRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogRemoveActionPerformed
+        try {
+            int[] selects = tableLog.getSelectedRows();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < selects.length; i++) {
+                sb.append((String) tableLog.getModel().getValueAt(selects[i], 0)).append(",");
+            }
+            String ids = sb.toString().substring(0, sb.toString().length() - 1);
+            deleteLog(ids);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnLogRemoveActionPerformed
 
-    private void btnUserEdit11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit11ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit11ActionPerformed
-
-    private void btnUserRemove8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove8ActionPerformed
-
-    private void btnUserRefresh8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh8ActionPerformed
-
-    private void btnUserPrev8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev8ActionPerformed
-
-    private void btnUserNext8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext8ActionPerformed
-
-    private void txtSearchTableUser8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser8MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser8MouseClicked
-
-    private void txtSearchTableUser8KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser8KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser8KeyPressed
-
-    private void btnTableUserSearch8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnTableUserSearch8ActionPerformed
+    private void btnLogRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogRefreshActionPerformed
+       new Thread(() -> { getLogs();} ).start();
+    }//GEN-LAST:event_btnLogRefreshActionPerformed
 
     private void btnTableUserSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearchActionPerformed
         String text = txtSearchTableUser.getText();
@@ -1968,12 +2053,12 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void btnUserNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNextActionPerformed
         int temp = pageIndexUser + 1;
-        if(temp <= totalPageUser) {
+        if (temp <= totalPageUser) {
             pageIndexUser++;
             new Thread(() -> {
                 getUsers(false);
             }).start();
-        }else {
+        } else {
             pageIndexUser = totalPageUser;
         }
 
@@ -1981,12 +2066,12 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void btnUserPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrevActionPerformed
         int temp = pageIndexUser - 1;
-        if((temp + 1) > 1) {
+        if ((temp + 1) > 1) {
             pageIndexUser--;
             new Thread(() -> {
                 getUsers(false);
             }).start();
-        }else {
+        } else {
             pageIndexUser = 1;
         }
     }//GEN-LAST:event_btnUserPrevActionPerformed
@@ -2037,7 +2122,7 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_btnDetailTypeAddActionPerformed
 
     private void btnDetailTypeEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeEditActionPerformed
-         int row = tableDetailType.getSelectedRow();
+        int row = tableDetailType.getSelectedRow();
         try {
             String id = (String) tableDetailType.getModel().getValueAt(row, 0);
             String name = (String) tableDetailType.getModel().getValueAt(row, 1);
@@ -2045,20 +2130,20 @@ public class Dashboard extends javax.swing.JFrame {
             String icon = (String) tableDetailType.getModel().getValueAt(row, 3);
             String description = (String) tableDetailType.getModel().getValueAt(row, 4);
             String parentId = (String) tableDetailType.getModel().getValueAt(row, 5);
-           
+
             DetailType dt = new DetailType();
             dt.setId(Integer.parseInt(id.trim()));
             dt.setName(name);
             dt.setCode(code);
             dt.setIcon(icon);
             dt.setDescription(description);
-            if(parentId != null) {
+            if (parentId != null) {
                 dt.setParentId(Integer.parseInt(parentId.trim()));
             }
             new ptit.webservice.UI.DetailType.edit().run(dt);
-            
+
         } catch (Exception e) {
-             e.printStackTrace();
+            e.printStackTrace();
         }
     }//GEN-LAST:event_btnDetailTypeEditActionPerformed
 
@@ -2082,25 +2167,25 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_btnDetailTypeRefreshActionPerformed
 
     private void btnDetailTypePrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypePrevActionPerformed
-      int temp = pageIndexDetailType - 1;
-        if((temp + 1) > 1) {
+        int temp = pageIndexDetailType - 1;
+        if ((temp + 1) > 1) {
             pageIndexDetailType--;
             new Thread(() -> {
                 getDetailTypes(false);
             }).start();
-        }else {
+        } else {
             pageIndexDetailType = 1;
         }
     }//GEN-LAST:event_btnDetailTypePrevActionPerformed
 
     private void btnDetailTypeNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailTypeNextActionPerformed
-         int temp = pageIndexDetailType + 1;
-        if(temp <= totalPageDetailType) {
+        int temp = pageIndexDetailType + 1;
+        if (temp <= totalPageDetailType) {
             pageIndexDetailType++;
             new Thread(() -> {
                 getDetailTypes(false);
             }).start();
-        }else {
+        } else {
             pageIndexDetailType = totalPageDetailType;
         }
     }//GEN-LAST:event_btnDetailTypeNextActionPerformed
@@ -2117,29 +2202,81 @@ public class Dashboard extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTableUserSearch9ActionPerformed
 
-    private void btnBrandAdd2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandAdd2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandAdd2ActionPerformed
+    private void btnDetailAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailAddActionPerformed
+        new ptit.webservice.UI.Detail.add().run();
+    }//GEN-LAST:event_btnDetailAddActionPerformed
 
-    private void btnBrandEdit2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandEdit2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandEdit2ActionPerformed
+    private void btnDetailEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailEditActionPerformed
+        int row = tableDetail.getSelectedRow();
+        try {
+            String id = (String) tableDetail.getModel().getValueAt(row, 0);
+            String val = (String) tableDetail.getModel().getValueAt(row, 1);
+            String detailTypeId = (String) tableDetail.getModel().getValueAt(row, 2);
+            String detailTypeName = (String) tableDetail.getModel().getValueAt(row, 3);
+            String detailTypeCode = (String) tableDetail.getModel().getValueAt(row, 4);
+            Detail dt = new Detail();
+            dt.setId(Integer.parseInt(id.trim()));
+            dt.setVal(val);
+            dt.setDetailType(new DetailType(Integer.parseInt(detailTypeId.trim()), detailTypeName, detailTypeCode));
 
-    private void btnBrandRemove2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRemove2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandRemove2ActionPerformed
+//            DetailType dt = new DetailType();
+//            dt.setId(Integer.parseInt(id.trim()));
+//            dt.setName(name);
+//            dt.setCode(code);
+//            dt.setIcon(icon);
+//            dt.setDescription(description);
+//            if (parentId != null) {
+//                dt.setParentId(Integer.parseInt(parentId.trim()));
+//            }
+            new ptit.webservice.UI.Detail.edit().run(dt);
 
-    private void btnBrandRefresh2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRefresh2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandRefresh2ActionPerformed
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_btnDetailEditActionPerformed
 
-    private void btnBrandPrev2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandPrev2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandPrev2ActionPerformed
+    private void btnDetailRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailRemoveActionPerformed
+        int row = tableDetail.getSelectedRow();
+        try {
+            String id = (String) tableDetail.getModel().getValueAt(row, 0);
+            int result = JOptionPane.showConfirmDialog(null, "Bạn có chắc muốn xoá Detail id: " + id + "", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+            if (result == JOptionPane.OK_OPTION) {
+                deleteDetail(Integer.parseInt(id.trim()));
+            }
+        } catch (HeadlessException | IOException e) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hàng cần xoá", "Thông báo", TrayIcon.MessageType.INFO.ordinal(), null);
+        }
+    }//GEN-LAST:event_btnDetailRemoveActionPerformed
 
-    private void btnBrandNext2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandNext2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnBrandNext2ActionPerformed
+    private void btnDetailRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailRefreshActionPerformed
+        new Thread(() -> {
+            getDetail(true);
+        }).start();
+    }//GEN-LAST:event_btnDetailRefreshActionPerformed
+
+    private void btnDetailPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailPrevActionPerformed
+        int temp = pageIndexDetail - 1;
+        if ((temp + 1) > 1) {
+            pageIndexDetail--;
+            new Thread(() -> {
+                getDetail(false);
+            }).start();
+        } else {
+            pageIndexDetail = 1;
+        }
+    }//GEN-LAST:event_btnDetailPrevActionPerformed
+
+    private void btnDetailNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailNextActionPerformed
+        int temp = pageIndexDetail + 1;
+        if (temp <= totalPageDetail) {
+            pageIndexDetail++;
+            new Thread(() -> {
+                getDetail(false);
+            }).start();
+        } else {
+            pageIndexDetail = totalPageDetail;
+        }
+    }//GEN-LAST:event_btnDetailNextActionPerformed
 
     private void txtSearchTableUser10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser10MouseClicked
         // TODO add your handling code here:
@@ -2152,6 +2289,21 @@ public class Dashboard extends javax.swing.JFrame {
     private void btnTableUserSearch10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch10ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTableUserSearch10ActionPerformed
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        new ptit.webservice.UI.AppUser.edit().run(Program.identities);
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+         new ptit.webservice.UI.AppUser.ChangePassword().run(Program.identities.getUsername());
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+       this.dispose();
+       Program.Token = "";
+       Program.identities = null;
+       new Login().run();
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
     public void searchTableContents(String searchString) {
         new Thread(() -> {
             DefaultTableModel temp = (DefaultTableModel) tableUser.getModel();
@@ -2226,71 +2378,73 @@ public class Dashboard extends javax.swing.JFrame {
             getUsers(false);
         }).start();
         new Thread(() -> {
-             getBrands(false);
+            getBrands(false);
         }).start();
-        
-         new Thread(() -> {
-             getDetailTypes(false);
+
+        new Thread(() -> {
+            getDetailTypes(false);
+        }).start();
+        new Thread(() -> {
+            getDetail(false);
+        }).start();
+
+        new Thread(() -> {
+            getLogs();
         }).start();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBrandAdd;
-    private javax.swing.JButton btnBrandAdd2;
     private javax.swing.JButton btnBrandEdit;
-    private javax.swing.JButton btnBrandEdit2;
     private javax.swing.JButton btnBrandNext;
-    private javax.swing.JButton btnBrandNext2;
     private javax.swing.JButton btnBrandPrev;
-    private javax.swing.JButton btnBrandPrev2;
     private javax.swing.JButton btnBrandRefresh;
-    private javax.swing.JButton btnBrandRefresh2;
     private javax.swing.JButton btnBrandRemove;
-    private javax.swing.JButton btnBrandRemove2;
+    private javax.swing.JButton btnDetailAdd;
+    private javax.swing.JButton btnDetailEdit;
+    private javax.swing.JButton btnDetailNext;
+    private javax.swing.JButton btnDetailPrev;
+    private javax.swing.JButton btnDetailRefresh;
+    private javax.swing.JButton btnDetailRemove;
     private javax.swing.JButton btnDetailTypeAdd;
     private javax.swing.JButton btnDetailTypeEdit;
     private javax.swing.JButton btnDetailTypeNext;
     private javax.swing.JButton btnDetailTypePrev;
     private javax.swing.JButton btnDetailTypeRefresh;
     private javax.swing.JButton btnDetailTypeRemove;
+    private javax.swing.JButton btnLogRefresh;
+    private javax.swing.JButton btnLogRemove;
     private javax.swing.JButton btnTableUserSearch;
     private javax.swing.JButton btnTableUserSearch1;
     private javax.swing.JButton btnTableUserSearch10;
     private javax.swing.JButton btnTableUserSearch2;
     private javax.swing.JButton btnTableUserSearch3;
     private javax.swing.JButton btnTableUserSearch6;
-    private javax.swing.JButton btnTableUserSearch8;
     private javax.swing.JButton btnTableUserSearch9;
     private javax.swing.JButton btnUserAdd;
     private javax.swing.JButton btnUserAdd1;
-    private javax.swing.JButton btnUserAdd11;
     private javax.swing.JButton btnUserAdd2;
     private javax.swing.JButton btnUserAdd3;
     private javax.swing.JButton btnUserEdit;
     private javax.swing.JButton btnUserEdit1;
-    private javax.swing.JButton btnUserEdit11;
     private javax.swing.JButton btnUserEdit2;
     private javax.swing.JButton btnUserEdit3;
     private javax.swing.JButton btnUserNext;
     private javax.swing.JButton btnUserNext1;
     private javax.swing.JButton btnUserNext2;
     private javax.swing.JButton btnUserNext3;
-    private javax.swing.JButton btnUserNext8;
     private javax.swing.JButton btnUserPrev;
     private javax.swing.JButton btnUserPrev1;
     private javax.swing.JButton btnUserPrev2;
     private javax.swing.JButton btnUserPrev3;
-    private javax.swing.JButton btnUserPrev8;
     private javax.swing.JButton btnUserRefresh;
     private javax.swing.JButton btnUserRefresh1;
     private javax.swing.JButton btnUserRefresh2;
     private javax.swing.JButton btnUserRefresh3;
-    private javax.swing.JButton btnUserRefresh8;
     private javax.swing.JButton btnUserRemove;
     private javax.swing.JButton btnUserRemove1;
     private javax.swing.JButton btnUserRemove2;
     private javax.swing.JButton btnUserRemove3;
-    private javax.swing.JButton btnUserRemove8;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
@@ -2328,23 +2482,22 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JLabel lbBrandPageIndex;
-    private javax.swing.JLabel lbBrandPageIndex2;
+    private javax.swing.JLabel lbDetailPageIndex;
     private javax.swing.JLabel lbDetailTypePageIndex;
     private javax.swing.JLabel lbPageIndex;
     private javax.swing.JLabel lbPageIndex1;
     private javax.swing.JLabel lbPageIndex2;
     private javax.swing.JLabel lbPageIndex3;
-    private javax.swing.JLabel lbPageIndex8;
     private javax.swing.JTabbedPane tabApprove;
     private javax.swing.JTabbedPane tabDetail;
     private javax.swing.JTable tableBrand;
-    private javax.swing.JTable tableBrand2;
+    private javax.swing.JTable tableDetail;
     private javax.swing.JTable tableDetailType;
+    private javax.swing.JTable tableLog;
     private javax.swing.JTable tableUser;
     private javax.swing.JTable tableUser1;
     private javax.swing.JTable tableUser2;
     private javax.swing.JTable tableUser3;
-    private javax.swing.JTable tableUser8;
     private javax.swing.JToolBar toolBarUser;
     private javax.swing.JToolBar toolBarUser1;
     private javax.swing.JToolBar toolBarUser10;
@@ -2359,7 +2512,6 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JTextField txtSearchTableUser2;
     private javax.swing.JTextField txtSearchTableUser3;
     private javax.swing.JTextField txtSearchTableUser6;
-    private javax.swing.JTextField txtSearchTableUser8;
     private javax.swing.JTextField txtSearchTableUser9;
     // End of variables declaration//GEN-END:variables
 

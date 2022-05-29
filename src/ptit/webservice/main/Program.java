@@ -51,8 +51,8 @@ public class Program {
     // GSON: https://sites.google.com/site/gson/gson-user-guide
 
     public static final String PrefixToken = "Bearer ";
-    public static String Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtIiwicm9sZSI6IkFETUlOIiwibmJmIjoxNjUyODg4NTYxLCJleHAiOjE2NTU1NjY5NjEsImlhdCI6MTY1Mjg4ODU2MX0.GikFIm18ut5WtPM0pu-6uP99uHa0uH7i4c0Qm_ZEVzQ";
-    public static final String BASE_URL = "http://localhost:5000/api/v1";
+    public static String Token = "";
+    public static final String BASE_URL = "http://tienns1-001-site1.ftempurl.com/api/v1";
     public static AppUser identities;
     
     public static void main(String[] args) throws UnsupportedEncodingException {

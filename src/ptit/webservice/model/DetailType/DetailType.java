@@ -21,6 +21,13 @@ public class DetailType {
     private String icon ;
     private String description ;
     private DetailType parent ;
+
+    public DetailType(int id, String name, String code) {
+        this.id = id;
+        this.name = name;
+        this.code = code;
+    }
+    
     
     public void setParentId(int parentId) {
         parent = new DetailType();
