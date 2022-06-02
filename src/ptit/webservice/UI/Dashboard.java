@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import ptit.webservice.UI.AppUser.add;
 import ptit.webservice.UI.AppUser.edit;
@@ -28,6 +29,8 @@ import ptit.webservice.main.Program;
 import ptit.webservice.model.AppLog.AppLog;
 import ptit.webservice.model.AppUser.AppUser;
 import ptit.webservice.model.Brand.Brand;
+import ptit.webservice.model.Car.Car;
+import ptit.webservice.model.Car.CarPutStatusModel;
 import ptit.webservice.model.Detail.Detail;
 import ptit.webservice.model.DetailType.DetailType;
 import ptit.webservice.model.PagingModel;
@@ -59,6 +62,31 @@ public class Dashboard extends javax.swing.JFrame {
     private static final int limitDetail = 20;
     private static int totalPageDetail = 0;
     private static final Map<Integer, List<Detail>> cacheDetail = new HashMap<>();
+
+    private static int pageIndexAllCar = 1;
+    private static final int limitAllCar = 20;
+    private static int totalPageAllCar = 0;
+    private static final Map<Integer, List<Car>> cacheAllCar = new HashMap<>();
+
+    private static int pageIndexCarWaitConfirm = 1;
+    private static final int limitCarWaitConfirm = 20;
+    private static int totalPageCarWaitConfirm = 0;
+    private static final Map<Integer, List<Car>> cacheCarWaitConfirm = new HashMap<>();
+
+    private static int pageIndexCarApprove = 1;
+    private static final int limitCarApprove = 20;
+    private static int totalPageCarApprove = 0;
+    private static final Map<Integer, List<Car>> cacheCarApprove = new HashMap<>();
+
+    private static int pageIndexCarIgnoreApprove = 1;
+    private static final int limitCarIgnoreApprove = 20;
+    private static int totalPageCarIgnoreApprove = 0;
+    private static final Map<Integer, List<Car>> cacheCarIgnoreApprove = new HashMap<>();
+
+    private static int pageIndexCarDeleted = 1;
+    private static final int limitCarDeleted = 20;
+    private static int totalPageCarDeleted = 0;
+    private static final Map<Integer, List<Car>> cacheCarDeleted = new HashMap<>();
 
     private void getUsers(boolean isRefresh) {
         try {
@@ -109,12 +137,15 @@ public class Dashboard extends javax.swing.JFrame {
             int size = appUsers.size();
             for (int i = 0; i < size; i++) {
                 Vector vt = new Vector<>();
-                vt.add(String.valueOf(appUsers.get(i).getId()));
-                vt.add(appUsers.get(i).getUsername());
-                vt.add(appUsers.get(i).getEmail());
-                vt.add(appUsers.get(i).getPhoneNumber());
-                vt.add(appUsers.get(i).getName());
-                vt.add(appUsers.get(i).getRole());
+                try {
+                    vt.add(String.valueOf(appUsers.get(i).getId()));
+                    vt.add(appUsers.get(i).getUsername());
+                    vt.add(appUsers.get(i).getEmail());
+                    vt.add(appUsers.get(i).getPhoneNumber());
+                    vt.add(appUsers.get(i).getName());
+                    vt.add(appUsers.get(i).getRole());
+                } catch (Exception e) {
+                }
                 //vt.add(appUsers.get(i).getAvatar());
                 model.addRow(vt);
             }
@@ -238,13 +269,16 @@ public class Dashboard extends javax.swing.JFrame {
             int size = detailTypes.size();
             for (int i = 0; i < size; i++) {
                 Vector vt = new Vector<>();
-                vt.add(String.valueOf(detailTypes.get(i).getId()));
-                vt.add(detailTypes.get(i).getName());
-                vt.add(detailTypes.get(i).getCode());
-                vt.add(detailTypes.get(i).getIcon());
-                vt.add(detailTypes.get(i).getDescription());
-                if (detailTypes.get(i).getParent() != null) {
-                    vt.add(String.valueOf(detailTypes.get(i).getParent().getId()));
+                try {
+                    vt.add(String.valueOf(detailTypes.get(i).getId()));
+                    vt.add(detailTypes.get(i).getName());
+                    vt.add(detailTypes.get(i).getCode());
+                    vt.add(detailTypes.get(i).getIcon());
+                    vt.add(detailTypes.get(i).getDescription());
+                    if (detailTypes.get(i).getParent() != null) {
+                        vt.add(String.valueOf(detailTypes.get(i).getParent().getId()));
+                    }
+                } catch (Exception e) {
                 }
                 model.addRow(vt);
             }
@@ -306,11 +340,14 @@ public class Dashboard extends javax.swing.JFrame {
             int size = details.size();
             for (int i = 0; i < size; i++) {
                 Vector vt = new Vector<>();
-                vt.add(String.valueOf(details.get(i).getId()));
-                vt.add(String.valueOf(details.get(i).getVal()));
-                vt.add(String.valueOf(details.get(i).getDetailType().getId()));
-                vt.add(String.valueOf(details.get(i).getDetailType().getName()));
-                vt.add(String.valueOf(details.get(i).getDetailType().getCode()));
+                try {
+                    vt.add(String.valueOf(details.get(i).getId()));
+                    vt.add(String.valueOf(details.get(i).getVal()));
+                    vt.add(String.valueOf(details.get(i).getDetailType().getId()));
+                    vt.add(String.valueOf(details.get(i).getDetailType().getName()));
+                    vt.add(String.valueOf(details.get(i).getDetailType().getCode()));
+                } catch (Exception e) {
+                }
                 model.addRow(vt);
             }
             lbDetailPageIndex.setText(String.valueOf(pageIndexDetail));
@@ -369,20 +406,411 @@ public class Dashboard extends javax.swing.JFrame {
             // model.addColumn("Avatar");
             logs.forEach(item -> {
                 Vector vt = new Vector();
-                vt.add(String.valueOf(item.getId()));
-                vt.add(item.getException());
-                vt.add(item.getMessage());
-                vt.add(item.getMethod());
-                vt.add(item.getParams());
-                vt.add(item.getRequest_url());
-                vt.add(String.valueOf(item.getStatus()));
-                vt.add(item.getCreated_at());
-                vt.add(item.getCreated_by());
-                vt.add(item.getQuery());
-                vt.add(item.getHeader());
-                vt.add(item.getHost());
+                try {
+                    vt.add(String.valueOf(item.getId()));
+                    vt.add(item.getException());
+                    vt.add(item.getMessage());
+                    vt.add(item.getMethod());
+                    vt.add(item.getParams());
+                    vt.add(item.getRequest_url());
+                    vt.add(String.valueOf(item.getStatus()));
+                    vt.add(item.getCreated_at());
+                    vt.add(item.getCreated_by());
+                    vt.add(item.getQuery());
+                    vt.add(item.getHeader());
+                    vt.add(item.getHost());
+                } catch (Exception e) {
+                }
                 model.addRow(vt);
             });
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getAllCars(boolean isRefresh) {
+        try {
+            List<Car> cars = cacheAllCar.get(pageIndexAllCar);
+            if (cars == null || isRefresh) {
+                String url = "/Cars/cars";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexAllCar));
+                params.put("limit", String.valueOf(limitAllCar));
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Car>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Car>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                cars = response.getData().getItems();
+                totalPageAllCar = response.getData().getTotalPage();
+                cacheAllCar.put(pageIndexAllCar, cars);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableAllCar.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Description");
+            model.addColumn("Price");
+            model.addColumn("TotalBooking");
+            model.addColumn("Status");
+            model.addColumn("Address");
+            model.addColumn("Brand");
+            model.addColumn("OwnerCar");
+
+            // model.addColumn("Avatar");
+            int size = cars.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                try {
+                    vt.add(String.valueOf(cars.get(i).getId()));
+                    vt.add(cars.get(i).getName());
+                    vt.add(cars.get(i).getDescription());
+                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(String.valueOf(cars.get(i).getTotalBooking()));
+                    vt.add(String.valueOf(cars.get(i).getStatus()));
+                    vt.add(String.valueOf(cars.get(i).getAddress()));
+                    vt.add(cars.get(i).getBrand().getName());
+                    vt.add(cars.get(i).getOwnerCar().getUsername());
+                } catch (Exception e) {
+                }
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndex.setText(String.valueOf(pageIndexUser));
+
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getCarsWaitConfirm(boolean isRefresh) {
+        try {
+            List<Car> cars = cacheCarWaitConfirm.get(pageIndexCarWaitConfirm);
+            if (cars == null || isRefresh) {
+                String url = "/Cars/cars-by-status";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexCarWaitConfirm));
+                params.put("limit", String.valueOf(limitCarWaitConfirm));
+                params.put("status", "0");
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Car>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Car>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                cars = response.getData().getItems();
+                totalPageCarWaitConfirm = response.getData().getTotalPage();
+                cacheCarWaitConfirm.put(pageIndexCarWaitConfirm, cars);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableCarWaitConfirm.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Description");
+            model.addColumn("Price");
+            model.addColumn("TotalBooking");
+            model.addColumn("Status");
+            model.addColumn("Address");
+            model.addColumn("Brand");
+            model.addColumn("OwnerCar");
+
+            // model.addColumn("Avatar");
+            int size = cars.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                try {
+                    vt.add(String.valueOf(cars.get(i).getId()));
+                    vt.add(cars.get(i).getName());
+                    vt.add(cars.get(i).getDescription());
+                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(String.valueOf(cars.get(i).getTotalBooking()));
+                    vt.add(String.valueOf(cars.get(i).getStatus()));
+                    vt.add(String.valueOf(cars.get(i).getAddress()));
+                    vt.add(cars.get(i).getBrand().getName());
+                    vt.add(cars.get(i).getOwnerCar().getUsername());
+                } catch (NullPointerException e) {
+
+                }
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndexCarWaitConfirm.setText(String.valueOf(pageIndexCarWaitConfirm));
+
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getCarsApprove(boolean isRefresh) {
+        try {
+            List<Car> cars = cacheCarApprove.get(pageIndexCarApprove);
+            if (cars == null || isRefresh) {
+                String url = "/Cars/cars-by-status";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexCarApprove));
+                params.put("limit", String.valueOf(limitCarApprove));
+                params.put("status", "1");
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Car>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Car>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                cars = response.getData().getItems();
+                totalPageCarApprove = response.getData().getTotalPage();
+                cacheCarApprove.put(pageIndexCarApprove, cars);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableCarApprove.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Description");
+            model.addColumn("Price");
+            model.addColumn("TotalBooking");
+            model.addColumn("Status");
+            model.addColumn("Address");
+            model.addColumn("Brand");
+            model.addColumn("OwnerCar");
+
+            // model.addColumn("Avatar");
+            int size = cars.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                try {
+                    vt.add(String.valueOf(cars.get(i).getId()));
+                    vt.add(cars.get(i).getName());
+                    vt.add(cars.get(i).getDescription());
+                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(String.valueOf(cars.get(i).getTotalBooking()));
+                    vt.add(String.valueOf(cars.get(i).getStatus()));
+                    vt.add(String.valueOf(cars.get(i).getAddress()));
+                    vt.add(cars.get(i).getBrand().getName());
+                    vt.add(cars.get(i).getOwnerCar().getUsername());
+                } catch (NullPointerException e) {
+
+                }
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndexCarApprove.setText(String.valueOf(pageIndexCarApprove));
+
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getCarsIgnoreApprove(boolean isRefresh) {
+        try {
+            List<Car> cars = cacheCarIgnoreApprove.get(pageIndexCarIgnoreApprove);
+            if (cars == null || isRefresh) {
+                String url = "/Cars/cars-by-status";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexCarIgnoreApprove));
+                params.put("limit", String.valueOf(limitCarIgnoreApprove));
+                params.put("status", "-1");
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Car>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Car>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                cars = response.getData().getItems();
+                totalPageCarIgnoreApprove = response.getData().getTotalPage();
+                cacheCarIgnoreApprove.put(pageIndexCarIgnoreApprove, cars);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableCarIgnoreApprove.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Description");
+            model.addColumn("Price");
+            model.addColumn("TotalBooking");
+            model.addColumn("Status");
+            model.addColumn("Address");
+            model.addColumn("Brand");
+            model.addColumn("OwnerCar");
+
+            // model.addColumn("Avatar");
+            int size = cars.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                try {
+                    vt.add(String.valueOf(cars.get(i).getId()));
+                    vt.add(cars.get(i).getName());
+                    vt.add(cars.get(i).getDescription());
+                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(String.valueOf(cars.get(i).getTotalBooking()));
+                    vt.add(String.valueOf(cars.get(i).getStatus()));
+                    vt.add(String.valueOf(cars.get(i).getAddress()));
+                    vt.add(cars.get(i).getBrand().getName());
+                    vt.add(cars.get(i).getOwnerCar().getUsername());
+                } catch (NullPointerException e) {
+
+                }
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndexCarIgnoreApprove.setText(String.valueOf(pageIndexCarIgnoreApprove));
+
+        } catch (ProtocolException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getCarsDeleted(boolean isRefresh) {
+        try {
+            List<Car> cars = cacheCarDeleted.get(pageIndexCarDeleted);
+            if (cars == null || isRefresh) {
+                String url = "/Cars/cars-by-status";
+                Map<String, String> params = new HashMap<>();
+                params.put("pageIndex", String.valueOf(pageIndexCarDeleted));
+                params.put("limit", String.valueOf(limitCarDeleted));
+                params.put("status", "2");
+
+                Map<Program.HttpHeader, String> headers = new HashMap<>();
+                headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+                headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+                String jsonData = Program.SendHttpGet(url, params, headers);
+
+                java.lang.reflect.Type type = new TypeToken<ResponseModel<PagingModel<Car>>>() {
+                }.getType();
+                ResponseModel<PagingModel<Car>> response = new Gson().fromJson(jsonData, type);
+                if (!response.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, response.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+                }
+                cars = response.getData().getItems();
+                totalPageCarDeleted = response.getData().getTotalPage();
+                cacheCarDeleted.put(pageIndexCarDeleted, cars);
+            }
+
+            DefaultTableModel model = (DefaultTableModel) tableCarDeleted.getModel();
+//                 DefaultTableModel model = new DefaultTableModel(){
+//                    @Override
+//                    public Class<?> getColumnClass(int column) {
+//                        switch (column) {
+//                            case 6: return ImageIcon.class;
+//                            default: return String.class;
+//                        }
+//                    }
+//                };
+            model.setColumnCount(0);
+            model.setRowCount(0);
+            model.addColumn("Id");
+            model.addColumn("Name");
+            model.addColumn("Description");
+            model.addColumn("Price");
+            model.addColumn("TotalBooking");
+            model.addColumn("Status");
+            model.addColumn("Address");
+            model.addColumn("Brand");
+            model.addColumn("OwnerCar");
+
+            // model.addColumn("Avatar");
+            int size = cars.size();
+            for (int i = 0; i < size; i++) {
+                Vector vt = new Vector<>();
+                try {
+                    vt.add(String.valueOf(cars.get(i).getId()));
+                    vt.add(cars.get(i).getName());
+                    vt.add(cars.get(i).getDescription());
+                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(String.valueOf(cars.get(i).getTotalBooking()));
+                    vt.add(String.valueOf(cars.get(i).getStatus()));
+                    vt.add(String.valueOf(cars.get(i).getAddress()));
+                    vt.add(cars.get(i).getBrand().getName());
+                    vt.add(cars.get(i).getOwnerCar().getUsername());
+                } catch (NullPointerException e) {
+
+                }
+                //vt.add(appUsers.get(i).getAvatar());
+                model.addRow(vt);
+            }
+            lbPageIndexCarDeleted.setText(String.valueOf(pageIndexCarDeleted));
+
         } catch (ProtocolException ex) {
             Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -429,46 +857,64 @@ public class Dashboard extends javax.swing.JFrame {
         tabApprove = new javax.swing.JTabbedPane();
         jPanel5 = new javax.swing.JPanel();
         toolBarUser1 = new javax.swing.JToolBar();
-        btnUserAdd1 = new javax.swing.JButton();
-        btnUserEdit1 = new javax.swing.JButton();
         btnUserRemove1 = new javax.swing.JButton();
         btnUserRefresh1 = new javax.swing.JButton();
         btnUserPrev1 = new javax.swing.JButton();
         lbPageIndex1 = new javax.swing.JLabel();
         btnUserNext1 = new javax.swing.JButton();
-        txtSearchTableUser1 = new javax.swing.JTextField();
+        txtSearchTableAllCar = new javax.swing.JTextField();
         btnTableUserSearch1 = new javax.swing.JButton();
         jPanel10 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        tableUser1 = new javax.swing.JTable();
+        tableAllCar = new javax.swing.JTable();
         jPanel6 = new javax.swing.JPanel();
         toolBarUser2 = new javax.swing.JToolBar();
-        btnUserAdd2 = new javax.swing.JButton();
-        btnUserEdit2 = new javax.swing.JButton();
-        btnUserRemove2 = new javax.swing.JButton();
-        btnUserRefresh2 = new javax.swing.JButton();
-        btnUserPrev2 = new javax.swing.JButton();
-        lbPageIndex2 = new javax.swing.JLabel();
-        btnUserNext2 = new javax.swing.JButton();
-        txtSearchTableUser2 = new javax.swing.JTextField();
+        cboxCarWaitConfirm = new javax.swing.JComboBox<>();
+        btnCarWaitConfirmRefresh = new javax.swing.JButton();
+        btnCarWaitConfirmPrev = new javax.swing.JButton();
+        lbPageIndexCarWaitConfirm = new javax.swing.JLabel();
+        btnCarWaitConfirmNext = new javax.swing.JButton();
+        txtSearchTableCarWaitConfirm = new javax.swing.JTextField();
         btnTableUserSearch2 = new javax.swing.JButton();
         jPanel11 = new javax.swing.JPanel();
         jScrollPane4 = new javax.swing.JScrollPane();
-        tableUser2 = new javax.swing.JTable();
+        tableCarWaitConfirm = new javax.swing.JTable();
         jPanel7 = new javax.swing.JPanel();
         toolBarUser3 = new javax.swing.JToolBar();
-        btnUserAdd3 = new javax.swing.JButton();
-        btnUserEdit3 = new javax.swing.JButton();
         btnUserRemove3 = new javax.swing.JButton();
         btnUserRefresh3 = new javax.swing.JButton();
-        btnUserPrev3 = new javax.swing.JButton();
-        lbPageIndex3 = new javax.swing.JLabel();
-        btnUserNext3 = new javax.swing.JButton();
-        txtSearchTableUser3 = new javax.swing.JTextField();
+        btnCarApprovePrev = new javax.swing.JButton();
+        lbPageIndexCarApprove = new javax.swing.JLabel();
+        btnCarApproveNext = new javax.swing.JButton();
+        txtSearchTableCarApprove = new javax.swing.JTextField();
         btnTableUserSearch3 = new javax.swing.JButton();
         jPanel12 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
-        tableUser3 = new javax.swing.JTable();
+        tableCarApprove = new javax.swing.JTable();
+        jPanel16 = new javax.swing.JPanel();
+        toolBarUser4 = new javax.swing.JToolBar();
+        cboxCarIgnoreApprove = new javax.swing.JComboBox<>();
+        btnCarIgnoreApprove = new javax.swing.JButton();
+        btnCarIgnoreApproveRefresh = new javax.swing.JButton();
+        btnCarApprovePrev1 = new javax.swing.JButton();
+        lbPageIndexCarIgnoreApprove = new javax.swing.JLabel();
+        btnCarApproveNext1 = new javax.swing.JButton();
+        txtSearchTableCarIgnoreApprove = new javax.swing.JTextField();
+        btnTableUserSearch4 = new javax.swing.JButton();
+        jPanel22 = new javax.swing.JPanel();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        tableCarIgnoreApprove = new javax.swing.JTable();
+        jPanel23 = new javax.swing.JPanel();
+        toolBarUser5 = new javax.swing.JToolBar();
+        btnUserRefresh5 = new javax.swing.JButton();
+        btnCarApprovePrev2 = new javax.swing.JButton();
+        lbPageIndexCarDeleted = new javax.swing.JLabel();
+        btnCarApproveNext2 = new javax.swing.JButton();
+        txtSearchTableCarDeleted = new javax.swing.JTextField();
+        btnTableUserSearch5 = new javax.swing.JButton();
+        jPanel24 = new javax.swing.JPanel();
+        jScrollPane7 = new javax.swing.JScrollPane();
+        tableCarDeleted = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
         toolBarUser6 = new javax.swing.JToolBar();
         btnBrandAdd = new javax.swing.JButton();
@@ -478,7 +924,7 @@ public class Dashboard extends javax.swing.JFrame {
         btnBrandPrev = new javax.swing.JButton();
         lbBrandPageIndex = new javax.swing.JLabel();
         btnBrandNext = new javax.swing.JButton();
-        txtSearchTableUser6 = new javax.swing.JTextField();
+        txtSearchTableBrand = new javax.swing.JTextField();
         btnTableUserSearch6 = new javax.swing.JButton();
         jPanel15 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
@@ -494,7 +940,7 @@ public class Dashboard extends javax.swing.JFrame {
         btnDetailTypePrev = new javax.swing.JButton();
         lbDetailTypePageIndex = new javax.swing.JLabel();
         btnDetailTypeNext = new javax.swing.JButton();
-        txtSearchTableUser9 = new javax.swing.JTextField();
+        txtSearchTableDetailType = new javax.swing.JTextField();
         btnTableUserSearch9 = new javax.swing.JButton();
         jPanel20 = new javax.swing.JPanel();
         jScrollPane11 = new javax.swing.JScrollPane();
@@ -508,7 +954,7 @@ public class Dashboard extends javax.swing.JFrame {
         btnDetailPrev = new javax.swing.JButton();
         lbDetailPageIndex = new javax.swing.JLabel();
         btnDetailNext = new javax.swing.JButton();
-        txtSearchTableUser10 = new javax.swing.JTextField();
+        txtSearchTableDetail = new javax.swing.JTextField();
         btnTableUserSearch10 = new javax.swing.JButton();
         jPanel21 = new javax.swing.JPanel();
         jScrollPane12 = new javax.swing.JScrollPane();
@@ -613,7 +1059,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         txtSearchTableUser.setForeground(new java.awt.Color(204, 204, 204));
         txtSearchTableUser.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser.setText("nhập tên đăng nhập, email, số điện thoại ...");
+        txtSearchTableUser.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
         txtSearchTableUser.setMinimumSize(new java.awt.Dimension(500, 500));
         txtSearchTableUser.setColumns(40);
         txtSearchTableUser.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -688,29 +1134,6 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser1.setBorder(null);
         toolBarUser1.setRollover(true);
 
-        btnUserAdd1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
-        btnUserAdd1.setText("Thêm");
-        buttonGroup1.add(btnUserAdd1);
-        btnUserAdd1.setFocusable(false);
-        btnUserAdd1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd1ActionPerformed(evt);
-            }
-        });
-        toolBarUser1.add(btnUserAdd1);
-
-        btnUserEdit1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
-        btnUserEdit1.setText("Sửa");
-        btnUserEdit1.setFocusable(false);
-        btnUserEdit1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit1ActionPerformed(evt);
-            }
-        });
-        toolBarUser1.add(btnUserEdit1);
-
         btnUserRemove1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
         btnUserRemove1.setText("Xoá");
         btnUserRemove1.setFocusable(false);
@@ -761,22 +1184,22 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser1.add(btnUserNext1);
 
-        txtSearchTableUser1.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser1.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser1.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser1.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser1.setColumns(40);
-        txtSearchTableUser1.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableAllCar.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableAllCar.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableAllCar.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableAllCar.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableAllCar.setColumns(40);
+        txtSearchTableAllCar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser1MouseClicked(evt);
+                txtSearchTableAllCarMouseClicked(evt);
             }
         });
-        txtSearchTableUser1.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableAllCar.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser1KeyPressed(evt);
+                txtSearchTableAllCarKeyPressed(evt);
             }
         });
-        toolBarUser1.add(txtSearchTableUser1);
+        toolBarUser1.add(txtSearchTableAllCar);
 
         btnTableUserSearch1.setText("Tìm kiếm");
         btnTableUserSearch1.setFocusable(false);
@@ -789,8 +1212,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser1.add(btnTableUserSearch1);
 
-        tableUser1.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser1.setModel(new javax.swing.table.DefaultTableModel(
+        tableAllCar.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableAllCar.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -800,12 +1223,12 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser1.setGridColor(java.awt.SystemColor.control);
-        tableUser1.setRowHeight(30);
-        tableUser1.setRowMargin(2);
-        tableUser1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane3.setViewportView(tableUser1);
+        tableAllCar.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableAllCar.setGridColor(java.awt.SystemColor.control);
+        tableAllCar.setRowHeight(30);
+        tableAllCar.setRowMargin(2);
+        tableAllCar.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane3.setViewportView(tableAllCar);
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
@@ -838,95 +1261,69 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser2.setBorder(null);
         toolBarUser2.setRollover(true);
 
-        btnUserAdd2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
-        btnUserAdd2.setText("Thêm");
-        buttonGroup1.add(btnUserAdd2);
-        btnUserAdd2.setFocusable(false);
-        btnUserAdd2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd2.addActionListener(new java.awt.event.ActionListener() {
+        cboxCarWaitConfirm.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Chọn", "Chấp nhận", "Từ chối" }));
+        cboxCarWaitConfirm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd2ActionPerformed(evt);
+                cboxCarWaitConfirmActionPerformed(evt);
             }
         });
-        toolBarUser2.add(btnUserAdd2);
+        toolBarUser2.add(cboxCarWaitConfirm);
 
-        btnUserEdit2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
-        btnUserEdit2.setText("Sửa");
-        btnUserEdit2.setFocusable(false);
-        btnUserEdit2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit2.addActionListener(new java.awt.event.ActionListener() {
+        btnCarWaitConfirmRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnCarWaitConfirmRefresh.setText("Làm mới");
+        btnCarWaitConfirmRefresh.setFocusable(false);
+        btnCarWaitConfirmRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnCarWaitConfirmRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit2ActionPerformed(evt);
+                btnCarWaitConfirmRefreshActionPerformed(evt);
             }
         });
-        toolBarUser2.add(btnUserEdit2);
+        toolBarUser2.add(btnCarWaitConfirmRefresh);
 
-        btnUserRemove2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
-        btnUserRemove2.setText("Xoá");
-        btnUserRemove2.setFocusable(false);
-        btnUserRemove2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRemove2.addActionListener(new java.awt.event.ActionListener() {
+        btnCarWaitConfirmPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnCarWaitConfirmPrev.setFocusable(false);
+        btnCarWaitConfirmPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarWaitConfirmPrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarWaitConfirmPrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRemove2ActionPerformed(evt);
+                btnCarWaitConfirmPrevActionPerformed(evt);
             }
         });
-        toolBarUser2.add(btnUserRemove2);
+        toolBarUser2.add(btnCarWaitConfirmPrev);
 
-        btnUserRefresh2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
-        btnUserRefresh2.setText("Làm mới");
-        btnUserRefresh2.setFocusable(false);
-        btnUserRefresh2.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserRefresh2.addActionListener(new java.awt.event.ActionListener() {
+        lbPageIndexCarWaitConfirm.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndexCarWaitConfirm.setText("page");
+        lbPageIndexCarWaitConfirm.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndexCarWaitConfirm.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser2.add(lbPageIndexCarWaitConfirm);
+
+        btnCarWaitConfirmNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnCarWaitConfirmNext.setFocusable(false);
+        btnCarWaitConfirmNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarWaitConfirmNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarWaitConfirmNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserRefresh2ActionPerformed(evt);
+                btnCarWaitConfirmNextActionPerformed(evt);
             }
         });
-        toolBarUser2.add(btnUserRefresh2);
+        toolBarUser2.add(btnCarWaitConfirmNext);
 
-        btnUserPrev2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
-        btnUserPrev2.setFocusable(false);
-        btnUserPrev2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev2ActionPerformed(evt);
-            }
-        });
-        toolBarUser2.add(btnUserPrev2);
-
-        lbPageIndex2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex2.setText("page");
-        lbPageIndex2.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser2.add(lbPageIndex2);
-
-        btnUserNext2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
-        btnUserNext2.setFocusable(false);
-        btnUserNext2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext2ActionPerformed(evt);
-            }
-        });
-        toolBarUser2.add(btnUserNext2);
-
-        txtSearchTableUser2.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser2.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser2.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser2.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
-        txtSearchTableUser2.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableCarWaitConfirm.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableCarWaitConfirm.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableCarWaitConfirm.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableCarWaitConfirm.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableCarWaitConfirm.setColumns(40);
+        txtSearchTableCarWaitConfirm.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser2MouseClicked(evt);
+                txtSearchTableCarWaitConfirmMouseClicked(evt);
             }
         });
-        txtSearchTableUser2.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableCarWaitConfirm.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser2KeyPressed(evt);
+                txtSearchTableCarWaitConfirmKeyPressed(evt);
             }
         });
-        toolBarUser2.add(txtSearchTableUser2);
+        toolBarUser2.add(txtSearchTableCarWaitConfirm);
 
         btnTableUserSearch2.setText("Tìm kiếm");
         btnTableUserSearch2.setFocusable(false);
@@ -939,8 +1336,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser2.add(btnTableUserSearch2);
 
-        tableUser2.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser2.setModel(new javax.swing.table.DefaultTableModel(
+        tableCarWaitConfirm.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableCarWaitConfirm.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -950,12 +1347,12 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser2.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser2.setGridColor(java.awt.SystemColor.control);
-        tableUser2.setRowHeight(30);
-        tableUser2.setRowMargin(2);
-        tableUser2.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane4.setViewportView(tableUser2);
+        tableCarWaitConfirm.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableCarWaitConfirm.setGridColor(java.awt.SystemColor.control);
+        tableCarWaitConfirm.setRowHeight(30);
+        tableCarWaitConfirm.setRowMargin(2);
+        tableCarWaitConfirm.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane4.setViewportView(tableCarWaitConfirm);
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -988,29 +1385,6 @@ public class Dashboard extends javax.swing.JFrame {
         toolBarUser3.setBorder(null);
         toolBarUser3.setRollover(true);
 
-        btnUserAdd3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/add.png"))); // NOI18N
-        btnUserAdd3.setText("Thêm");
-        buttonGroup1.add(btnUserAdd3);
-        btnUserAdd3.setFocusable(false);
-        btnUserAdd3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserAdd3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserAdd3ActionPerformed(evt);
-            }
-        });
-        toolBarUser3.add(btnUserAdd3);
-
-        btnUserEdit3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/edit.png"))); // NOI18N
-        btnUserEdit3.setText("Sửa");
-        btnUserEdit3.setFocusable(false);
-        btnUserEdit3.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        btnUserEdit3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserEdit3ActionPerformed(evt);
-            }
-        });
-        toolBarUser3.add(btnUserEdit3);
-
         btnUserRemove3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
         btnUserRemove3.setText("Xoá");
         btnUserRemove3.setFocusable(false);
@@ -1033,50 +1407,50 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser3.add(btnUserRefresh3);
 
-        btnUserPrev3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
-        btnUserPrev3.setFocusable(false);
-        btnUserPrev3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserPrev3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserPrev3.addActionListener(new java.awt.event.ActionListener() {
+        btnCarApprovePrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnCarApprovePrev.setFocusable(false);
+        btnCarApprovePrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApprovePrev.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApprovePrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserPrev3ActionPerformed(evt);
+                btnCarApprovePrevActionPerformed(evt);
             }
         });
-        toolBarUser3.add(btnUserPrev3);
+        toolBarUser3.add(btnCarApprovePrev);
 
-        lbPageIndex3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lbPageIndex3.setText("page");
-        lbPageIndex3.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        lbPageIndex3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        toolBarUser3.add(lbPageIndex3);
+        lbPageIndexCarApprove.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndexCarApprove.setText("page");
+        lbPageIndexCarApprove.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndexCarApprove.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser3.add(lbPageIndexCarApprove);
 
-        btnUserNext3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
-        btnUserNext3.setFocusable(false);
-        btnUserNext3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnUserNext3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnUserNext3.addActionListener(new java.awt.event.ActionListener() {
+        btnCarApproveNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnCarApproveNext.setFocusable(false);
+        btnCarApproveNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApproveNext.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApproveNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUserNext3ActionPerformed(evt);
+                btnCarApproveNextActionPerformed(evt);
             }
         });
-        toolBarUser3.add(btnUserNext3);
+        toolBarUser3.add(btnCarApproveNext);
 
-        txtSearchTableUser3.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser3.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser3.setText("nhập tên đăng nhập, email, số điện thoại ...");
-        txtSearchTableUser3.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser.setColumns(40);
-        txtSearchTableUser3.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableCarApprove.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableCarApprove.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableCarApprove.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableCarApprove.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableCarApprove.setColumns(40);
+        txtSearchTableCarApprove.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser3MouseClicked(evt);
+                txtSearchTableCarApproveMouseClicked(evt);
             }
         });
-        txtSearchTableUser3.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableCarApprove.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser3KeyPressed(evt);
+                txtSearchTableCarApproveKeyPressed(evt);
             }
         });
-        toolBarUser3.add(txtSearchTableUser3);
+        toolBarUser3.add(txtSearchTableCarApprove);
 
         btnTableUserSearch3.setText("Tìm kiếm");
         btnTableUserSearch3.setFocusable(false);
@@ -1089,8 +1463,8 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser3.add(btnTableUserSearch3);
 
-        tableUser3.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
-        tableUser3.setModel(new javax.swing.table.DefaultTableModel(
+        tableCarApprove.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableCarApprove.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -1100,12 +1474,12 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
             }
         ));
-        tableUser3.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        tableUser3.setGridColor(java.awt.SystemColor.control);
-        tableUser3.setRowHeight(30);
-        tableUser3.setRowMargin(2);
-        tableUser3.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane5.setViewportView(tableUser3);
+        tableCarApprove.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableCarApprove.setGridColor(java.awt.SystemColor.control);
+        tableCarApprove.setRowHeight(30);
+        tableCarApprove.setRowMargin(2);
+        tableCarApprove.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane5.setViewportView(tableCarApprove);
 
         javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
@@ -1134,6 +1508,257 @@ public class Dashboard extends javax.swing.JFrame {
         );
 
         tabApprove.addTab("Đã duyệt", jPanel7);
+
+        toolBarUser4.setBorder(null);
+        toolBarUser4.setRollover(true);
+
+        cboxCarIgnoreApprove.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Chọn", "Khôi Phục" }));
+        cboxCarIgnoreApprove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboxCarIgnoreApproveActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(cboxCarIgnoreApprove);
+
+        btnCarIgnoreApprove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/remove.png"))); // NOI18N
+        btnCarIgnoreApprove.setText("Xoá");
+        btnCarIgnoreApprove.setFocusable(false);
+        btnCarIgnoreApprove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnCarIgnoreApprove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarIgnoreApproveActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(btnCarIgnoreApprove);
+
+        btnCarIgnoreApproveRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnCarIgnoreApproveRefresh.setText("Làm mới");
+        btnCarIgnoreApproveRefresh.setFocusable(false);
+        btnCarIgnoreApproveRefresh.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnCarIgnoreApproveRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarIgnoreApproveRefreshActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(btnCarIgnoreApproveRefresh);
+
+        btnCarApprovePrev1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnCarApprovePrev1.setFocusable(false);
+        btnCarApprovePrev1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApprovePrev1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApprovePrev1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarApprovePrev1ActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(btnCarApprovePrev1);
+
+        lbPageIndexCarIgnoreApprove.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndexCarIgnoreApprove.setText("page");
+        lbPageIndexCarIgnoreApprove.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndexCarIgnoreApprove.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser4.add(lbPageIndexCarIgnoreApprove);
+
+        btnCarApproveNext1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnCarApproveNext1.setFocusable(false);
+        btnCarApproveNext1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApproveNext1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApproveNext1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarApproveNext1ActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(btnCarApproveNext1);
+
+        txtSearchTableCarIgnoreApprove.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableCarIgnoreApprove.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableCarIgnoreApprove.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableCarIgnoreApprove.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableCarIgnoreApprove.setColumns(40);
+        txtSearchTableCarIgnoreApprove.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtSearchTableCarIgnoreApproveMouseClicked(evt);
+            }
+        });
+        txtSearchTableCarIgnoreApprove.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtSearchTableCarIgnoreApproveKeyPressed(evt);
+            }
+        });
+        toolBarUser4.add(txtSearchTableCarIgnoreApprove);
+
+        btnTableUserSearch4.setText("Tìm kiếm");
+        btnTableUserSearch4.setFocusable(false);
+        btnTableUserSearch4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTableUserSearch4ActionPerformed(evt);
+            }
+        });
+        toolBarUser4.add(btnTableUserSearch4);
+
+        tableCarIgnoreApprove.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableCarIgnoreApprove.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+            }
+        ));
+        tableCarIgnoreApprove.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableCarIgnoreApprove.setGridColor(java.awt.SystemColor.control);
+        tableCarIgnoreApprove.setRowHeight(30);
+        tableCarIgnoreApprove.setRowMargin(2);
+        tableCarIgnoreApprove.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane6.setViewportView(tableCarIgnoreApprove);
+
+        javax.swing.GroupLayout jPanel22Layout = new javax.swing.GroupLayout(jPanel22);
+        jPanel22.setLayout(jPanel22Layout);
+        jPanel22Layout.setHorizontalGroup(
+            jPanel22Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        );
+        jPanel22Layout.setVerticalGroup(
+            jPanel22Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel16Layout = new javax.swing.GroupLayout(jPanel16);
+        jPanel16.setLayout(jPanel16Layout);
+        jPanel16Layout.setHorizontalGroup(
+            jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(toolBarUser4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel16Layout.setVerticalGroup(
+            jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel16Layout.createSequentialGroup()
+                .addComponent(toolBarUser4, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        tabApprove.addTab("Từ chối duyệt", jPanel16);
+
+        toolBarUser5.setBorder(null);
+        toolBarUser5.setRollover(true);
+
+        btnUserRefresh5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-refresh-24.png"))); // NOI18N
+        btnUserRefresh5.setText("Làm mới");
+        btnUserRefresh5.setFocusable(false);
+        btnUserRefresh5.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUserRefresh5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUserRefresh5ActionPerformed(evt);
+            }
+        });
+        toolBarUser5.add(btnUserRefresh5);
+
+        btnCarApprovePrev2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-rewind-button-round-24.png"))); // NOI18N
+        btnCarApprovePrev2.setFocusable(false);
+        btnCarApprovePrev2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApprovePrev2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApprovePrev2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarApprovePrev2ActionPerformed(evt);
+            }
+        });
+        toolBarUser5.add(btnCarApprovePrev2);
+
+        lbPageIndexCarDeleted.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lbPageIndexCarDeleted.setText("page");
+        lbPageIndexCarDeleted.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        lbPageIndexCarDeleted.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBarUser5.add(lbPageIndexCarDeleted);
+
+        btnCarApproveNext2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resource/icons8-fast-forward-round-24.png"))); // NOI18N
+        btnCarApproveNext2.setFocusable(false);
+        btnCarApproveNext2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnCarApproveNext2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnCarApproveNext2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCarApproveNext2ActionPerformed(evt);
+            }
+        });
+        toolBarUser5.add(btnCarApproveNext2);
+
+        txtSearchTableCarDeleted.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableCarDeleted.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableCarDeleted.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableCarDeleted.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableCarDeleted.setColumns(40);
+        txtSearchTableCarDeleted.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtSearchTableCarDeletedMouseClicked(evt);
+            }
+        });
+        txtSearchTableCarDeleted.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtSearchTableCarDeletedKeyPressed(evt);
+            }
+        });
+        toolBarUser5.add(txtSearchTableCarDeleted);
+
+        btnTableUserSearch5.setText("Tìm kiếm");
+        btnTableUserSearch5.setFocusable(false);
+        btnTableUserSearch5.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTableUserSearch5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTableUserSearch5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTableUserSearch5ActionPerformed(evt);
+            }
+        });
+        toolBarUser5.add(btnTableUserSearch5);
+
+        tableCarDeleted.setBorder(javax.swing.BorderFactory.createEtchedBorder(null, java.awt.SystemColor.controlHighlight));
+        tableCarDeleted.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+            }
+        ));
+        tableCarDeleted.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tableCarDeleted.setGridColor(java.awt.SystemColor.control);
+        tableCarDeleted.setRowHeight(30);
+        tableCarDeleted.setRowMargin(2);
+        tableCarDeleted.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        jScrollPane7.setViewportView(tableCarDeleted);
+
+        javax.swing.GroupLayout jPanel24Layout = new javax.swing.GroupLayout(jPanel24);
+        jPanel24.setLayout(jPanel24Layout);
+        jPanel24Layout.setHorizontalGroup(
+            jPanel24Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+        );
+        jPanel24Layout.setVerticalGroup(
+            jPanel24Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel23Layout = new javax.swing.GroupLayout(jPanel23);
+        jPanel23.setLayout(jPanel23Layout);
+        jPanel23Layout.setHorizontalGroup(
+            jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(toolBarUser5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel24, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel23Layout.setVerticalGroup(
+            jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel23Layout.createSequentialGroup()
+                .addComponent(toolBarUser5, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel24, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        tabApprove.addTab("Đã xoá", jPanel23);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1224,22 +1849,22 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser6.add(btnBrandNext);
 
-        txtSearchTableUser6.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser6.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser6.setText("nhập tên, code.");
-        txtSearchTableUser6.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser6.setColumns(40);
-        txtSearchTableUser6.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableBrand.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableBrand.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableBrand.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableBrand.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableBrand.setColumns(40);
+        txtSearchTableBrand.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser6MouseClicked(evt);
+                txtSearchTableBrandMouseClicked(evt);
             }
         });
-        txtSearchTableUser6.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableBrand.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser6KeyPressed(evt);
+                txtSearchTableBrandKeyPressed(evt);
             }
         });
-        toolBarUser6.add(txtSearchTableUser6);
+        toolBarUser6.add(txtSearchTableBrand);
 
         btnTableUserSearch6.setText("Tìm kiếm");
         btnTableUserSearch6.setFocusable(false);
@@ -1374,22 +1999,22 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser9.add(btnDetailTypeNext);
 
-        txtSearchTableUser9.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser9.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser9.setText("nhập tên, code.");
-        txtSearchTableUser9.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser9.setColumns(40);
-        txtSearchTableUser9.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableDetailType.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableDetailType.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableDetailType.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableDetailType.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableDetailType.setColumns(40);
+        txtSearchTableDetailType.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser9MouseClicked(evt);
+                txtSearchTableDetailTypeMouseClicked(evt);
             }
         });
-        txtSearchTableUser9.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableDetailType.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser9KeyPressed(evt);
+                txtSearchTableDetailTypeKeyPressed(evt);
             }
         });
-        toolBarUser9.add(txtSearchTableUser9);
+        toolBarUser9.add(txtSearchTableDetailType);
 
         btnTableUserSearch9.setText("Tìm kiếm");
         btnTableUserSearch9.setFocusable(false);
@@ -1524,22 +2149,22 @@ public class Dashboard extends javax.swing.JFrame {
         });
         toolBarUser10.add(btnDetailNext);
 
-        txtSearchTableUser10.setForeground(new java.awt.Color(204, 204, 204));
-        txtSearchTableUser10.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtSearchTableUser10.setText("nhập tên, code.");
-        txtSearchTableUser10.setMinimumSize(new java.awt.Dimension(500, 500));
-        txtSearchTableUser10.setColumns(40);
-        txtSearchTableUser10.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtSearchTableDetail.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearchTableDetail.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtSearchTableDetail.setText("nhập giá trị 1 cột bất kì để tìm kiếm");
+        txtSearchTableDetail.setMinimumSize(new java.awt.Dimension(500, 500));
+        txtSearchTableDetail.setColumns(40);
+        txtSearchTableDetail.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtSearchTableUser10MouseClicked(evt);
+                txtSearchTableDetailMouseClicked(evt);
             }
         });
-        txtSearchTableUser10.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchTableDetail.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtSearchTableUser10KeyPressed(evt);
+                txtSearchTableDetailKeyPressed(evt);
             }
         });
-        toolBarUser10.add(txtSearchTableUser10);
+        toolBarUser10.add(txtSearchTableDetail);
 
         btnTableUserSearch10.setText("Tìm kiếm");
         btnTableUserSearch10.setFocusable(false);
@@ -1753,112 +2378,199 @@ public class Dashboard extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnUserAdd1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd1ActionPerformed
-
-    private void btnUserEdit1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit1ActionPerformed
-
     private void btnUserRemove1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove1ActionPerformed
-        // TODO add your handling code here:
+        int result = JOptionPane.showConfirmDialog(null, "Xoá những hàng đã chọn", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+        if (result == JOptionPane.OK_OPTION) {
+            int[] rows = tableAllCar.getSelectedRows();
+            if (rows == null || rows.length <= 0) {
+                return;
+            }
+
+            int index = 0;
+            CarPutStatusModel[] models = new CarPutStatusModel[rows.length];
+            int status = 2; // deleted
+
+            for (int row : rows) {
+                int carId = Integer.parseInt(((String) tableAllCar.getModel().getValueAt(row, 0)).trim());
+                CarPutStatusModel model = new CarPutStatusModel(carId, status);
+                models[index++] = model;
+            }
+            updateRangeCarStatus(models);
+        }
+
     }//GEN-LAST:event_btnUserRemove1ActionPerformed
 
     private void btnUserRefresh1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh1ActionPerformed
-        // TODO add your handling code here:
+        new Thread(() -> {
+            getAllCars(true);
+        }).start();
     }//GEN-LAST:event_btnUserRefresh1ActionPerformed
 
     private void btnUserPrev1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev1ActionPerformed
-        // TODO add your handling code here:
+        int temp = pageIndexAllCar - 1;
+        if ((temp + 1) > 1) {
+            pageIndexAllCar--;
+            new Thread(() -> {
+                getAllCars(false);
+            }).start();
+        } else {
+            pageIndexAllCar = 1;
+        }
     }//GEN-LAST:event_btnUserPrev1ActionPerformed
 
     private void btnUserNext1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext1ActionPerformed
-        // TODO add your handling code here:
+        int temp = pageIndexAllCar + 1;
+        if (temp <= totalPageAllCar) {
+            pageIndexAllCar++;
+            new Thread(() -> {
+                getAllCars(false);
+            }).start();
+        } else {
+            pageIndexAllCar = totalPageAllCar;
+        }
     }//GEN-LAST:event_btnUserNext1ActionPerformed
 
-    private void txtSearchTableUser1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser1MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser1MouseClicked
+    private void txtSearchTableAllCarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableAllCarMouseClicked
+        if (txtSearchTableAllCar.getForeground() != Color.BLACK) {
+            txtSearchTableAllCar.setForeground(Color.BLACK);
+            txtSearchTableAllCar.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableAllCarMouseClicked
 
-    private void txtSearchTableUser1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser1KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser1KeyPressed
+    private void txtSearchTableAllCarKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableAllCarKeyPressed
+        if (txtSearchTableAllCar.getForeground() != Color.BLACK) {
+            txtSearchTableAllCar.setForeground(Color.BLACK);
+            txtSearchTableAllCar.setText("");
+            txtSearchTableAllCar.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableAllCarKeyPressed
 
     private void btnTableUserSearch1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch1ActionPerformed
-        // TODO add your handling code here:
+        String text = txtSearchTableAllCar.getText();
+        searchTableContents(text, tableAllCar);
     }//GEN-LAST:event_btnTableUserSearch1ActionPerformed
 
-    private void btnUserAdd2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd2ActionPerformed
+    private void btnCarWaitConfirmRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarWaitConfirmRefreshActionPerformed
+        new Thread(() -> {
+            getCarsWaitConfirm(true);
+        }).start();
+    }//GEN-LAST:event_btnCarWaitConfirmRefreshActionPerformed
 
-    private void btnUserEdit2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit2ActionPerformed
+    private void btnCarWaitConfirmPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarWaitConfirmPrevActionPerformed
+        int temp = pageIndexCarWaitConfirm - 1;
+        if ((temp + 1) > 1) {
+            pageIndexCarWaitConfirm--;
+            new Thread(() -> {
+                getCarsWaitConfirm(false);
+            }).start();
+        } else {
+            pageIndexCarWaitConfirm = 1;
+        }
+    }//GEN-LAST:event_btnCarWaitConfirmPrevActionPerformed
 
-    private void btnUserRemove2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRemove2ActionPerformed
+    private void btnCarWaitConfirmNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarWaitConfirmNextActionPerformed
+        int temp = pageIndexCarWaitConfirm + 1;
+        if (temp <= totalPageCarWaitConfirm) {
+            pageIndexCarWaitConfirm++;
+            new Thread(() -> {
+                getCarsWaitConfirm(false);
+            }).start();
+        } else {
+            pageIndexCarWaitConfirm = totalPageCarWaitConfirm;
+        }
+    }//GEN-LAST:event_btnCarWaitConfirmNextActionPerformed
 
-    private void btnUserRefresh2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserRefresh2ActionPerformed
+    private void txtSearchTableCarWaitConfirmMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableCarWaitConfirmMouseClicked
+        if (txtSearchTableCarWaitConfirm.getForeground() != Color.BLACK) {
+            txtSearchTableCarWaitConfirm.setForeground(Color.BLACK);
+            txtSearchTableCarWaitConfirm.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableCarWaitConfirmMouseClicked
 
-    private void btnUserPrev2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev2ActionPerformed
+    private void txtSearchTableCarWaitConfirmKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableCarWaitConfirmKeyPressed
 
-    private void btnUserNext2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext2ActionPerformed
-
-    private void txtSearchTableUser2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser2MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser2MouseClicked
-
-    private void txtSearchTableUser2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser2KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser2KeyPressed
+        if (txtSearchTableCarWaitConfirm.getForeground() != Color.BLACK) {
+            txtSearchTableCarWaitConfirm.setForeground(Color.BLACK);
+            txtSearchTableCarWaitConfirm.setText("");
+            txtSearchTableCarWaitConfirm.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableCarWaitConfirmKeyPressed
 
     private void btnTableUserSearch2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch2ActionPerformed
-        // TODO add your handling code here:
+        String text = txtSearchTableCarWaitConfirm.getText();
+        searchTableContents(text, tableCarWaitConfirm);
     }//GEN-LAST:event_btnTableUserSearch2ActionPerformed
 
-    private void btnUserAdd3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserAdd3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserAdd3ActionPerformed
-
-    private void btnUserEdit3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserEdit3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserEdit3ActionPerformed
-
     private void btnUserRemove3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRemove3ActionPerformed
-        // TODO add your handling code here:
+        int result = JOptionPane.showConfirmDialog(null, "Xoá những hàng đã chọn", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+        if (result == JOptionPane.OK_OPTION) {
+            int[] rows = tableCarApprove.getSelectedRows();
+            if (rows == null || rows.length <= 0) {
+                return;
+            }
+
+            int index = 0;
+            CarPutStatusModel[] models = new CarPutStatusModel[rows.length];
+            int status = 2; // deleted
+
+            for (int row : rows) {
+                int carId = Integer.parseInt(((String) tableCarApprove.getModel().getValueAt(row, 0)).trim());
+                CarPutStatusModel model = new CarPutStatusModel(carId, status);
+                models[index++] = model;
+            }
+            updateRangeCarStatus(models);
+        }
+
     }//GEN-LAST:event_btnUserRemove3ActionPerformed
 
     private void btnUserRefresh3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh3ActionPerformed
-        // TODO add your handling code here:
+        new Thread(() -> {
+            getCarsApprove(true);
+        }).start();
     }//GEN-LAST:event_btnUserRefresh3ActionPerformed
 
-    private void btnUserPrev3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserPrev3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserPrev3ActionPerformed
+    private void btnCarApprovePrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApprovePrevActionPerformed
+        int temp = pageIndexCarApprove - 1;
+        if ((temp + 1) > 1) {
+            pageIndexCarApprove--;
+            new Thread(() -> {
+                getCarsApprove(false);
+            }).start();
+        } else {
+            pageIndexCarApprove = 1;
+        }
+    }//GEN-LAST:event_btnCarApprovePrevActionPerformed
 
-    private void btnUserNext3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserNext3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnUserNext3ActionPerformed
+    private void btnCarApproveNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApproveNextActionPerformed
+        int temp = pageIndexCarApprove + 1;
+        if (temp <= totalPageCarApprove) {
+            pageIndexCarApprove++;
+            new Thread(() -> {
+                getCarsApprove(false);
+            }).start();
+        } else {
+            pageIndexCarApprove = totalPageCarApprove;
+        }
+    }//GEN-LAST:event_btnCarApproveNextActionPerformed
 
-    private void txtSearchTableUser3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser3MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser3MouseClicked
+    private void txtSearchTableCarApproveMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableCarApproveMouseClicked
+        if (txtSearchTableCarApprove.getForeground() != Color.BLACK) {
+            txtSearchTableCarApprove.setForeground(Color.BLACK);
+            txtSearchTableCarApprove.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableCarApproveMouseClicked
 
-    private void txtSearchTableUser3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser3KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser3KeyPressed
+    private void txtSearchTableCarApproveKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableCarApproveKeyPressed
+        if (txtSearchTableCarApprove.getForeground() != Color.BLACK) {
+            txtSearchTableCarApprove.setForeground(Color.BLACK);
+            txtSearchTableCarApprove.setText("");
+            txtSearchTableCarApprove.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableCarApproveKeyPressed
 
     private void btnTableUserSearch3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch3ActionPerformed
-        // TODO add your handling code here:
+        String text = txtSearchTableCarApprove.getText();
+        searchTableContents(text, tableCarApprove);
     }//GEN-LAST:event_btnTableUserSearch3ActionPerformed
 
     private void btnBrandAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandAddActionPerformed
@@ -1969,7 +2681,7 @@ public class Dashboard extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, response.get("data").toString(), "Thông báo", TrayIcon.MessageType.NONE.ordinal(), null);
         }
     }
-    
+
     private void btnBrandRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandRefreshActionPerformed
         new Thread(() -> {
             getBrands(true);
@@ -1991,7 +2703,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void btnBrandNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrandNextActionPerformed
         int temp = pageIndexBrand + 1;
-        if (temp <= pageIndexBrand) {
+        if (temp <= totalPageBrand) {
             pageIndexBrand++;
             new Thread(() -> {
                 getBrands(false);
@@ -2001,16 +2713,24 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnBrandNextActionPerformed
 
-    private void txtSearchTableUser6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser6MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser6MouseClicked
+    private void txtSearchTableBrandMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableBrandMouseClicked
+        if (txtSearchTableBrand.getForeground() != Color.BLACK) {
+            txtSearchTableBrand.setForeground(Color.BLACK);
+            txtSearchTableBrand.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableBrandMouseClicked
 
-    private void txtSearchTableUser6KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser6KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser6KeyPressed
+    private void txtSearchTableBrandKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableBrandKeyPressed
+        if (txtSearchTableBrand.getForeground() != Color.BLACK) {
+            txtSearchTableBrand.setForeground(Color.BLACK);
+            txtSearchTableBrand.setText("");
+            txtSearchTableBrand.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableBrandKeyPressed
 
     private void btnTableUserSearch6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch6ActionPerformed
-        // TODO add your handling code here:
+        String text = txtSearchTableBrand.getText();
+        searchTableContents(text, tableBrand);
     }//GEN-LAST:event_btnTableUserSearch6ActionPerformed
 
     private void btnLogRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogRemoveActionPerformed
@@ -2028,12 +2748,14 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_btnLogRemoveActionPerformed
 
     private void btnLogRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogRefreshActionPerformed
-       new Thread(() -> { getLogs();} ).start();
+        new Thread(() -> {
+            getLogs();
+        }).start();
     }//GEN-LAST:event_btnLogRefreshActionPerformed
 
     private void btnTableUserSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearchActionPerformed
         String text = txtSearchTableUser.getText();
-        searchTableContents(text);
+        searchTableContents(text, tableUser);
     }//GEN-LAST:event_btnTableUserSearchActionPerformed
 
     private void txtSearchTableUserKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUserKeyPressed
@@ -2190,16 +2912,24 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnDetailTypeNextActionPerformed
 
-    private void txtSearchTableUser9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser9MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser9MouseClicked
+    private void txtSearchTableDetailTypeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableDetailTypeMouseClicked
+        String text = txtSearchTableDetailType.getText();
+        searchTableContents(text, tableDetailType);
+    }//GEN-LAST:event_txtSearchTableDetailTypeMouseClicked
 
-    private void txtSearchTableUser9KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser9KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser9KeyPressed
+    private void txtSearchTableDetailTypeKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableDetailTypeKeyPressed
+        if (txtSearchTableDetailType.getForeground() != Color.BLACK) {
+            txtSearchTableDetailType.setForeground(Color.BLACK);
+            txtSearchTableDetailType.setText("");
+            txtSearchTableDetailType.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableDetailTypeKeyPressed
 
     private void btnTableUserSearch9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch9ActionPerformed
-        // TODO add your handling code here:
+        if (txtSearchTableDetailType.getForeground() != Color.BLACK) {
+            txtSearchTableDetailType.setForeground(Color.BLACK);
+            txtSearchTableDetailType.setText("");
+        }
     }//GEN-LAST:event_btnTableUserSearch9ActionPerformed
 
     private void btnDetailAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailAddActionPerformed
@@ -2278,16 +3008,24 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnDetailNextActionPerformed
 
-    private void txtSearchTableUser10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableUser10MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser10MouseClicked
+    private void txtSearchTableDetailMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableDetailMouseClicked
+        if (txtSearchTableDetail.getForeground() != Color.BLACK) {
+            txtSearchTableDetail.setForeground(Color.BLACK);
+            txtSearchTableDetail.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableDetailMouseClicked
 
-    private void txtSearchTableUser10KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableUser10KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSearchTableUser10KeyPressed
+    private void txtSearchTableDetailKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableDetailKeyPressed
+        if (txtSearchTableDetail.getForeground() != Color.BLACK) {
+            txtSearchTableDetail.setForeground(Color.BLACK);
+            txtSearchTableDetail.setText("");
+            txtSearchTableDetail.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableDetailKeyPressed
 
     private void btnTableUserSearch10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch10ActionPerformed
-        // TODO add your handling code here:
+        String text = txtSearchTableDetail.getText();
+        searchTableContents(text, tableDetail);
     }//GEN-LAST:event_btnTableUserSearch10ActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -2295,18 +3033,221 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-         new ptit.webservice.UI.AppUser.ChangePassword().run(Program.identities.getUsername());
+        new ptit.webservice.UI.AppUser.ChangePassword().run(Program.identities.getUsername());
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
-       this.dispose();
-       Program.Token = "";
-       Program.identities = null;
-       new Login().run();
+        this.dispose();
+        Program.Token = "";
+        Program.identities = null;
+        new Login().run();
     }//GEN-LAST:event_jMenuItem4ActionPerformed
-    public void searchTableContents(String searchString) {
+
+    private void cboxCarWaitConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxCarWaitConfirmActionPerformed
+        int[] rows = tableCarWaitConfirm.getSelectedRows();
+        if (rows == null || rows.length <= 0) {
+            return;
+        }
+
+        int index = 0;
+        CarPutStatusModel[] models = new CarPutStatusModel[rows.length];
+        int status = 0;
+        switch (cboxCarWaitConfirm.getSelectedIndex()) {
+            case 1: {
+                status = 1;
+                break;
+            }
+            case 2: {
+                status = -1;
+                break;
+            }
+            default:
+                return;
+        }
+        for (int row : rows) {
+            int carId = Integer.parseInt(((String) tableCarWaitConfirm.getModel().getValueAt(row, 0)).trim());
+            CarPutStatusModel model = new CarPutStatusModel(carId, status);
+            models[index++] = model;
+        }
+        updateRangeCarStatus(models);
+        cboxCarWaitConfirm.getModel().setSelectedItem("Chọn");
+    }//GEN-LAST:event_cboxCarWaitConfirmActionPerformed
+
+    private void btnCarIgnoreApproveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarIgnoreApproveActionPerformed
+        int result = JOptionPane.showConfirmDialog(null, "Xoá những hàng đã chọn", "Thông báo", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null);
+        if (result == JOptionPane.OK_OPTION) {
+            int[] rows = tableCarIgnoreApprove.getSelectedRows();
+            if (rows == null || rows.length <= 0) {
+                return;
+            }
+
+            int index = 0;
+            CarPutStatusModel[] models = new CarPutStatusModel[rows.length];
+            int status = 2;
+
+            for (int row : rows) {
+                int carId = Integer.parseInt(((String) tableCarIgnoreApprove.getModel().getValueAt(row, 0)).trim());
+                CarPutStatusModel model = new CarPutStatusModel(carId, status);
+                models[index++] = model;
+            }
+            updateRangeCarStatus(models);
+        }
+
+    }//GEN-LAST:event_btnCarIgnoreApproveActionPerformed
+
+    private void btnCarIgnoreApproveRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarIgnoreApproveRefreshActionPerformed
         new Thread(() -> {
-            DefaultTableModel temp = (DefaultTableModel) tableUser.getModel();
+            getCarsIgnoreApprove(true);
+        }).start();
+    }//GEN-LAST:event_btnCarIgnoreApproveRefreshActionPerformed
+
+    private void btnCarApprovePrev1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApprovePrev1ActionPerformed
+        int temp = pageIndexCarIgnoreApprove - 1;
+        if ((temp + 1) > 1) {
+            pageIndexCarIgnoreApprove--;
+            new Thread(() -> {
+                getCarsIgnoreApprove(false);
+            }).start();
+        } else {
+            pageIndexCarIgnoreApprove = 1;
+        }
+    }//GEN-LAST:event_btnCarApprovePrev1ActionPerformed
+
+    private void btnCarApproveNext1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApproveNext1ActionPerformed
+        int temp = pageIndexCarIgnoreApprove + 1;
+        if (temp <= totalPageCarIgnoreApprove) {
+            pageIndexCarIgnoreApprove++;
+            new Thread(() -> {
+                getCarsIgnoreApprove(false);
+            }).start();
+        } else {
+            pageIndexCarIgnoreApprove = totalPageCarIgnoreApprove;
+        }
+    }//GEN-LAST:event_btnCarApproveNext1ActionPerformed
+
+    private void txtSearchTableCarIgnoreApproveMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableCarIgnoreApproveMouseClicked
+        if (txtSearchTableCarIgnoreApprove.getForeground() != Color.BLACK) {
+            txtSearchTableCarIgnoreApprove.setForeground(Color.BLACK);
+            txtSearchTableCarIgnoreApprove.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableCarIgnoreApproveMouseClicked
+
+    private void txtSearchTableCarIgnoreApproveKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableCarIgnoreApproveKeyPressed
+        if (txtSearchTableCarIgnoreApprove.getForeground() != Color.BLACK) {
+            txtSearchTableCarIgnoreApprove.setForeground(Color.BLACK);
+            txtSearchTableCarIgnoreApprove.setText("");
+            txtSearchTableCarIgnoreApprove.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableCarIgnoreApproveKeyPressed
+
+    private void btnTableUserSearch4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch4ActionPerformed
+        String text = txtSearchTableCarIgnoreApprove.getText();
+        searchTableContents(text, tableCarIgnoreApprove);
+    }//GEN-LAST:event_btnTableUserSearch4ActionPerformed
+
+    private void btnUserRefresh5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserRefresh5ActionPerformed
+        new Thread(() -> {
+            getCarsDeleted(true);
+        }).start();
+    }//GEN-LAST:event_btnUserRefresh5ActionPerformed
+
+    private void btnCarApprovePrev2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApprovePrev2ActionPerformed
+        int temp = pageIndexCarDeleted - 1;
+        if ((temp + 1) > 1) {
+            pageIndexCarDeleted--;
+            new Thread(() -> {
+                getCarsDeleted(false);
+            }).start();
+        } else {
+            pageIndexCarDeleted = 1;
+        }
+    }//GEN-LAST:event_btnCarApprovePrev2ActionPerformed
+
+    private void btnCarApproveNext2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCarApproveNext2ActionPerformed
+        int temp = pageIndexCarDeleted + 1;
+        if (temp <= totalPageCarDeleted) {
+            pageIndexCarDeleted++;
+            new Thread(() -> {
+                getCarsDeleted(false);
+            }).start();
+        } else {
+            pageIndexCarDeleted = totalPageCarDeleted;
+        }
+    }//GEN-LAST:event_btnCarApproveNext2ActionPerformed
+
+    private void txtSearchTableCarDeletedMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSearchTableCarDeletedMouseClicked
+        if (txtSearchTableCarDeleted.getForeground() != Color.BLACK) {
+            txtSearchTableCarDeleted.setForeground(Color.BLACK);
+            txtSearchTableCarDeleted.setText("");
+        }
+    }//GEN-LAST:event_txtSearchTableCarDeletedMouseClicked
+
+    private void txtSearchTableCarDeletedKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchTableCarDeletedKeyPressed
+        if (txtSearchTableCarDeleted.getForeground() != Color.BLACK) {
+            txtSearchTableCarDeleted.setForeground(Color.BLACK);
+            txtSearchTableCarDeleted.setText("");
+            txtSearchTableCarDeleted.setText(String.valueOf(evt.getKeyChar()));
+        }
+    }//GEN-LAST:event_txtSearchTableCarDeletedKeyPressed
+
+    private void btnTableUserSearch5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableUserSearch5ActionPerformed
+        String text = txtSearchTableUser.getText();
+        searchTableContents(text, tableCarDeleted);
+    }//GEN-LAST:event_btnTableUserSearch5ActionPerformed
+
+    private void cboxCarIgnoreApproveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxCarIgnoreApproveActionPerformed
+        int[] rows = tableCarIgnoreApprove.getSelectedRows();
+        if (rows == null || rows.length <= 0) {
+            return;
+        }
+
+        int index = 0;
+        CarPutStatusModel[] models = new CarPutStatusModel[rows.length];
+        int status = 0;
+        if (cboxCarIgnoreApprove.getSelectedIndex() == 0) {
+            return;
+        }
+
+        for (int row : rows) {
+            int carId = Integer.parseInt(((String) tableCarIgnoreApprove.getModel().getValueAt(row, 0)).trim());
+            CarPutStatusModel model = new CarPutStatusModel(carId, status);
+            models[index++] = model;
+        }
+        updateRangeCarStatus(models);
+        cboxCarIgnoreApprove.getModel().setSelectedItem("Chọn");
+    }//GEN-LAST:event_cboxCarIgnoreApproveActionPerformed
+
+    private void updateRangeCarStatus(CarPutStatusModel[] model) {
+        try {
+            String url = "/Cars/update-status-cars";
+            Program.HttpMethod method = Program.HttpMethod.PUT;
+            String jsonPayload = new Gson().toJson(model);
+            byte[] data = jsonPayload.getBytes("UTF-8");
+
+            Map<Program.HttpHeader, String> headers = new HashMap<>();
+            headers.put(Program.HttpHeader.Authorization, Program.PrefixToken + Program.Token);
+            headers.put(Program.HttpHeader.ContentType, "application/json; charset=utf-8");
+
+            String jsonData = Program.SendHttp(url, method, data, null, headers);
+            Map<String, Object> response = new Gson().fromJson(jsonData, Map.class);
+            boolean isSuccess = (boolean) response.get("success");
+            if (!isSuccess) {
+                String message = response.get("message").toString();
+                JOptionPane.showMessageDialog(this, message, "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+            } else {
+
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công", "Thông báo", TrayIcon.MessageType.INFO.ordinal(), null);
+            }
+        } catch (ProtocolException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Thông báo", TrayIcon.MessageType.ERROR.ordinal(), null);
+        }
+    }
+
+    public void searchTableContents(String searchString, JTable table) {
+        new Thread(() -> {
+            DefaultTableModel temp = (DefaultTableModel) table.getModel();
             List<Vector> list = new ArrayList<>();
             for (Object rows : temp.getDataVector()) {
                 Vector rowVector = (Vector) rows;
@@ -2323,10 +3264,10 @@ public class Dashboard extends javax.swing.JFrame {
 
             }
 
-            ((DefaultTableModel) tableUser.getModel()).setRowCount(0);
+            ((DefaultTableModel) table.getModel()).setRowCount(0);
 
             list.forEach(row -> {
-                ((DefaultTableModel) tableUser.getModel()).addRow(row);
+                ((DefaultTableModel) table.getModel()).addRow(row);
             });
         }).start();
 
@@ -2391,6 +3332,26 @@ public class Dashboard extends javax.swing.JFrame {
         new Thread(() -> {
             getLogs();
         }).start();
+
+        new Thread(() -> {
+            getAllCars(false);
+        }).start();
+
+        new Thread(() -> {
+            getCarsWaitConfirm(false);
+        }).start();
+
+        new Thread(() -> {
+            getCarsApprove(false);
+        }).start();
+
+        new Thread(() -> {
+            getCarsIgnoreApprove(false);
+        }).start();
+
+        new Thread(() -> {
+            getCarsDeleted(false);
+        }).start();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2400,6 +3361,17 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JButton btnBrandPrev;
     private javax.swing.JButton btnBrandRefresh;
     private javax.swing.JButton btnBrandRemove;
+    private javax.swing.JButton btnCarApproveNext;
+    private javax.swing.JButton btnCarApproveNext1;
+    private javax.swing.JButton btnCarApproveNext2;
+    private javax.swing.JButton btnCarApprovePrev;
+    private javax.swing.JButton btnCarApprovePrev1;
+    private javax.swing.JButton btnCarApprovePrev2;
+    private javax.swing.JButton btnCarIgnoreApprove;
+    private javax.swing.JButton btnCarIgnoreApproveRefresh;
+    private javax.swing.JButton btnCarWaitConfirmNext;
+    private javax.swing.JButton btnCarWaitConfirmPrev;
+    private javax.swing.JButton btnCarWaitConfirmRefresh;
     private javax.swing.JButton btnDetailAdd;
     private javax.swing.JButton btnDetailEdit;
     private javax.swing.JButton btnDetailNext;
@@ -2419,33 +3391,26 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JButton btnTableUserSearch10;
     private javax.swing.JButton btnTableUserSearch2;
     private javax.swing.JButton btnTableUserSearch3;
+    private javax.swing.JButton btnTableUserSearch4;
+    private javax.swing.JButton btnTableUserSearch5;
     private javax.swing.JButton btnTableUserSearch6;
     private javax.swing.JButton btnTableUserSearch9;
     private javax.swing.JButton btnUserAdd;
-    private javax.swing.JButton btnUserAdd1;
-    private javax.swing.JButton btnUserAdd2;
-    private javax.swing.JButton btnUserAdd3;
     private javax.swing.JButton btnUserEdit;
-    private javax.swing.JButton btnUserEdit1;
-    private javax.swing.JButton btnUserEdit2;
-    private javax.swing.JButton btnUserEdit3;
     private javax.swing.JButton btnUserNext;
     private javax.swing.JButton btnUserNext1;
-    private javax.swing.JButton btnUserNext2;
-    private javax.swing.JButton btnUserNext3;
     private javax.swing.JButton btnUserPrev;
     private javax.swing.JButton btnUserPrev1;
-    private javax.swing.JButton btnUserPrev2;
-    private javax.swing.JButton btnUserPrev3;
     private javax.swing.JButton btnUserRefresh;
     private javax.swing.JButton btnUserRefresh1;
-    private javax.swing.JButton btnUserRefresh2;
     private javax.swing.JButton btnUserRefresh3;
+    private javax.swing.JButton btnUserRefresh5;
     private javax.swing.JButton btnUserRemove;
     private javax.swing.JButton btnUserRemove1;
-    private javax.swing.JButton btnUserRemove2;
     private javax.swing.JButton btnUserRemove3;
     private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JComboBox<String> cboxCarIgnoreApprove;
+    private javax.swing.JComboBox<String> cboxCarWaitConfirm;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
@@ -2458,12 +3423,16 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
     private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel16;
     private javax.swing.JPanel jPanel17;
     private javax.swing.JPanel jPanel18;
     private javax.swing.JPanel jPanel19;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel20;
     private javax.swing.JPanel jPanel21;
+    private javax.swing.JPanel jPanel22;
+    private javax.swing.JPanel jPanel23;
+    private javax.swing.JPanel jPanel24;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -2478,6 +3447,8 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane6;
+    private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
@@ -2486,33 +3457,41 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel lbDetailTypePageIndex;
     private javax.swing.JLabel lbPageIndex;
     private javax.swing.JLabel lbPageIndex1;
-    private javax.swing.JLabel lbPageIndex2;
-    private javax.swing.JLabel lbPageIndex3;
+    private javax.swing.JLabel lbPageIndexCarApprove;
+    private javax.swing.JLabel lbPageIndexCarDeleted;
+    private javax.swing.JLabel lbPageIndexCarIgnoreApprove;
+    private javax.swing.JLabel lbPageIndexCarWaitConfirm;
     private javax.swing.JTabbedPane tabApprove;
     private javax.swing.JTabbedPane tabDetail;
+    private javax.swing.JTable tableAllCar;
     private javax.swing.JTable tableBrand;
+    private javax.swing.JTable tableCarApprove;
+    private javax.swing.JTable tableCarDeleted;
+    private javax.swing.JTable tableCarIgnoreApprove;
+    private javax.swing.JTable tableCarWaitConfirm;
     private javax.swing.JTable tableDetail;
     private javax.swing.JTable tableDetailType;
     private javax.swing.JTable tableLog;
     private javax.swing.JTable tableUser;
-    private javax.swing.JTable tableUser1;
-    private javax.swing.JTable tableUser2;
-    private javax.swing.JTable tableUser3;
     private javax.swing.JToolBar toolBarUser;
     private javax.swing.JToolBar toolBarUser1;
     private javax.swing.JToolBar toolBarUser10;
     private javax.swing.JToolBar toolBarUser2;
     private javax.swing.JToolBar toolBarUser3;
+    private javax.swing.JToolBar toolBarUser4;
+    private javax.swing.JToolBar toolBarUser5;
     private javax.swing.JToolBar toolBarUser6;
     private javax.swing.JToolBar toolBarUser8;
     private javax.swing.JToolBar toolBarUser9;
+    private javax.swing.JTextField txtSearchTableAllCar;
+    private javax.swing.JTextField txtSearchTableBrand;
+    private javax.swing.JTextField txtSearchTableCarApprove;
+    private javax.swing.JTextField txtSearchTableCarDeleted;
+    private javax.swing.JTextField txtSearchTableCarIgnoreApprove;
+    private javax.swing.JTextField txtSearchTableCarWaitConfirm;
+    private javax.swing.JTextField txtSearchTableDetail;
+    private javax.swing.JTextField txtSearchTableDetailType;
     private javax.swing.JTextField txtSearchTableUser;
-    private javax.swing.JTextField txtSearchTableUser1;
-    private javax.swing.JTextField txtSearchTableUser10;
-    private javax.swing.JTextField txtSearchTableUser2;
-    private javax.swing.JTextField txtSearchTableUser3;
-    private javax.swing.JTextField txtSearchTableUser6;
-    private javax.swing.JTextField txtSearchTableUser9;
     // End of variables declaration//GEN-END:variables
 
 }
