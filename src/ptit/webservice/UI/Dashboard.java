@@ -486,7 +486,7 @@ public class Dashboard extends javax.swing.JFrame {
                     vt.add(String.valueOf(cars.get(i).getId()));
                     vt.add(cars.get(i).getName());
                     vt.add(cars.get(i).getDescription());
-                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(cars.get(i).getPriceFormat());
                     vt.add(String.valueOf(cars.get(i).getTotalBooking()));
                     vt.add(String.valueOf(cars.get(i).getStatus()));
                     vt.add(String.valueOf(cars.get(i).getAddress()));
@@ -563,7 +563,7 @@ public class Dashboard extends javax.swing.JFrame {
                     vt.add(String.valueOf(cars.get(i).getId()));
                     vt.add(cars.get(i).getName());
                     vt.add(cars.get(i).getDescription());
-                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(cars.get(i).getPriceFormat());
                     vt.add(String.valueOf(cars.get(i).getTotalBooking()));
                     vt.add(String.valueOf(cars.get(i).getStatus()));
                     vt.add(String.valueOf(cars.get(i).getAddress()));
@@ -641,7 +641,7 @@ public class Dashboard extends javax.swing.JFrame {
                     vt.add(String.valueOf(cars.get(i).getId()));
                     vt.add(cars.get(i).getName());
                     vt.add(cars.get(i).getDescription());
-                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(cars.get(i).getPriceFormat());
                     vt.add(String.valueOf(cars.get(i).getTotalBooking()));
                     vt.add(String.valueOf(cars.get(i).getStatus()));
                     vt.add(String.valueOf(cars.get(i).getAddress()));
@@ -719,7 +719,7 @@ public class Dashboard extends javax.swing.JFrame {
                     vt.add(String.valueOf(cars.get(i).getId()));
                     vt.add(cars.get(i).getName());
                     vt.add(cars.get(i).getDescription());
-                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(cars.get(i).getPriceFormat());
                     vt.add(String.valueOf(cars.get(i).getTotalBooking()));
                     vt.add(String.valueOf(cars.get(i).getStatus()));
                     vt.add(String.valueOf(cars.get(i).getAddress()));
@@ -797,7 +797,7 @@ public class Dashboard extends javax.swing.JFrame {
                     vt.add(String.valueOf(cars.get(i).getId()));
                     vt.add(cars.get(i).getName());
                     vt.add(cars.get(i).getDescription());
-                    vt.add(String.valueOf(cars.get(i).getPrice()));
+                    vt.add(cars.get(i).getPriceFormat());
                     vt.add(String.valueOf(cars.get(i).getTotalBooking()));
                     vt.add(String.valueOf(cars.get(i).getStatus()));
                     vt.add(String.valueOf(cars.get(i).getAddress()));

@@ -1,6 +1,8 @@
 package ptit.webservice.model.Car;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,4 +34,8 @@ public class Car {
     private AppUser ownerCar;
     private Collection<Detail> details;
     private Collection<CarImage> images;
+    
+    public String getPriceFormat() {
+        return NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("vn")).format(price);
+    }
 }
